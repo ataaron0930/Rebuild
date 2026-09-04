@@ -39,6 +39,7 @@
   h1{font-size:30px;line-height:1.02;font-weight:800;letter-spacing:-.01em;text-transform:uppercase;margin:0}
   .sub{font-size:14px;color:var(--mut);margin-top:8px}
   .metaline{font-family:var(--mono);font-size:11px;color:var(--mut);letter-spacing:.04em;margin-top:8px}
+  .metaline.dirty{color:var(--amber)}
 
   /* paste screen */
   .paste{background:var(--panel);border:1px solid var(--line);padding:15px;margin-bottom:12px}
@@ -66,8 +67,21 @@
   .verdict span{display:block;font-size:13px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--mut);margin-top:5px}
 
   .seclabel{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
-    color:var(--mut);border-bottom:1px solid var(--line);padding-bottom:6px;margin:24px 0 12px}
-  .warmup{background:var(--panel2);border:1px dashed var(--line);padding:12px 13px;font-size:13.5px;color:var(--mut)}
+    color:var(--mut);border-bottom:1px solid var(--line);padding-bottom:6px;margin:24px 0 12px;
+    display:flex;gap:10px;align-items:baseline}
+  .seclabel .cnt{margin-left:auto;color:var(--amber);letter-spacing:.06em}
+
+  /* WARM-UP — tickable rows */
+  .warmrow{display:flex;gap:11px;align-items:center;background:var(--panel2);
+    border:1px solid var(--line);border-left:3px solid rgba(232,163,61,.45);
+    padding:12px 13px;margin-bottom:7px;cursor:pointer}
+  .warmrow .wtxt{flex:1;min-width:0;font-size:14.5px;line-height:1.35}
+  .warmrow.on{border-left-color:var(--go);background:rgba(79,180,119,.07)}
+  .warmrow.on .wtxt{color:var(--mut)}
+  .wtick{background:var(--panel);border:1px solid var(--line);color:var(--mut);
+    font-size:18px;font-family:var(--mono);min-width:46px;height:42px;flex:0 0 auto;
+    display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .wtick.on{background:var(--go);border-color:var(--go);color:#0E141A;font-weight:700}
 
   /* items */
   .item{background:var(--panel);border:1px solid var(--line);margin-bottom:10px}
@@ -83,9 +97,13 @@
   .iname{flex:1;min-width:0}
   .iname h3{font-size:19px;font-weight:700;text-transform:uppercase;margin:0;line-height:1.15}
   .scheme{font-family:var(--mono);font-size:11.5px;color:var(--mut);margin-top:4px;letter-spacing:.04em}
+  .scheme .rst{color:var(--amber)}
   .target{font-size:12.5px;color:var(--amber);margin-top:6px;line-height:1.4}
   .lockflag{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--nogo);text-transform:uppercase;margin-top:6px;display:none}
   .item.locked .lockflag{display:block}
+  .partflag{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--amber);
+    text-transform:uppercase;margin-top:6px;display:none}
+  .item.partial .partflag{display:block}
   .chev{color:var(--mut);font-size:13px;margin-top:4px}
   .item.open .chev{transform:rotate(180deg)}
   .sets{padding:0 13px 13px;display:none}
@@ -113,6 +131,9 @@
     text-transform:uppercase;letter-spacing:.08em;font-size:13px;padding:13px;cursor:pointer;margin-top:8px}
   .out{width:100%;min-height:170px;font-size:12px;margin-top:10px;display:none}
   .out.show{display:block}
+  .warnbar{display:none;background:rgba(232,163,61,.1);border:1px solid rgba(232,163,61,.5);
+    color:var(--amber);font-size:13px;padding:11px 12px;margin-top:10px;line-height:1.4}
+  .warnbar.show{display:block}
 
   /* saved list */
   .srow{display:flex;gap:10px;align-items:center;background:var(--panel);
@@ -123,14 +144,17 @@
   .srow.cur{border-left:3px solid var(--amber)}
 
   .dock{position:fixed;left:0;right:0;bottom:0;background:rgba(14,20,26,.96);
-    border-top:1px solid var(--line);padding:11px 14px calc(11px + env(safe-area-inset-bottom));z-index:50}
+    border-top:1px solid var(--line);padding:9px 14px calc(9px + env(safe-area-inset-bottom));z-index:50}
   .dockin{max-width:640px;margin:0 auto;display:flex;gap:9px;align-items:center}
-  .clock{font-family:var(--mono);font-size:28px;font-weight:600;color:var(--amber);min-width:82px}
+  .clock{font-family:var(--mono);font-size:28px;font-weight:600;color:var(--amber);min-width:78px}
   .clock.rest{color:var(--go)}
   .dockbtns{display:flex;gap:6px;flex:1}
   .dockbtn{flex:1;background:var(--panel);border:1px solid var(--line);color:var(--tx);
     font-family:var(--mono);font-size:12px;padding:12px 0;cursor:pointer}
-  .prog{font-family:var(--mono);font-size:11px;color:var(--mut);text-align:right;min-width:56px}
+  .dockbtn.prime{border-color:var(--amber);color:var(--amber)}
+  .prog{font-family:var(--mono);font-size:11px;color:var(--mut);text-align:right;min-width:52px}
+  .restwho{max-width:640px;margin:5px auto 0;font-family:var(--mono);font-size:10.5px;
+    letter-spacing:.06em;color:var(--mut);text-transform:uppercase;min-height:13px}
   footer{font-size:12px;color:var(--mut);text-align:center;padding:20px 0 4px;line-height:1.6}
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -156,18 +180,26 @@
 
     <div class="paste">
       <h2>Sheet text</h2>
-      <p>Copy the movement table out of the .docx, or type it. Table rows, tabs, or plain lines all work.</p>
-      <textarea id="pasteBox" rows="12" placeholder="TITLE: Push A — Day 2&#10;DATE: Aug 31 2026&#10;GATE: below 7 locks out items 1-4&#10;&#10;1 | Barbell bench (Tonal) | 3 x 8 | Target 52&#10;2 | Incline press | 3 x 10 | Target 42"></textarea>
+      <p>Copy the movement table out of the sheet, or type it. Table rows, tabs, or plain lines all work.</p>
+      <textarea id="pasteBox" rows="12" placeholder="TITLE: Push A — Day 2&#10;DATE: Aug 31 2026&#10;GATE: below 7 locks out items 1-4&#10;&#10;1 | Barbell bench (Tonal) | 3 x 8 | Target 52 | 150 s&#10;2 | Incline press | 3 x 10 | Target 42 | 120 s"></textarea>
       <div class="err hide" id="pasteErr"></div>
       <button type="button" class="bigbtn" id="buildBtn">Build session</button>
       <button type="button" class="ghostbtn" id="exampleBtn">Load Monday's Push A</button>
 
       <div class="fmt"><b>What it reads</b>
-TITLE: / DATE: / GATE: / WARM-UP: / CONDITIONING:  — optional header lines
-Then one movement per line:   <b>number · name · sets x reps · target note</b>
+TITLE: / DATE: / GATE: / WARM-UP: / CONDITIONING: / REST:  — optional headers
+Then one movement per line:
+  <b>number · name · sets x reps · target · rest</b>
 Separate with |  or a tab  or two spaces.
 GATE: below 7 locks out items 1-4   ← sets the shoulder rule
-Sets come from the "3 x 8" — write 4 x 10 and you get four rows.</div>
+REST: 90 s                          ← default when a row has none
+Sets come from the "3 x 8" — write 4 x 10 and you get four rows.
+
+<b>Rest column</b> takes 150 s · 90s · 2:30 · 2 min.
+Enter a rep count and that rest starts on its own.
+
+<b>Warm-up</b> lines are tickable. Split them with  /  or one
+WARM-UP: line each.</div>
     </div>
   </section>
 
@@ -196,8 +228,8 @@ Sets come from the "3 x 8" — write 4 x 10 and you get four rows.</div>
     </section>
 
     <div id="warmWrap" class="hide">
-      <div class="seclabel">Warm-up — not logged</div>
-      <div class="warmup" id="warmBox"></div>
+      <div class="seclabel">Warm-up <span class="cnt" id="warmCnt"></span></div>
+      <div id="warmList"></div>
     </div>
 
     <div class="seclabel" id="listLabel">Session</div>
@@ -224,6 +256,7 @@ Sets come from the "3 x 8" — write 4 x 10 and you get four rows.</div>
     </div>
 
     <button type="button" class="bigbtn" id="copyBtn">Copy summary to paste back</button>
+    <div class="warnbar" id="warnbar"></div>
     <textarea class="inote out" id="out" readonly></textarea>
     <button type="button" class="ghostbtn" id="delBtn">Delete this session</button>
 
@@ -235,13 +268,13 @@ Sets come from the "3 x 8" — write 4 x 10 and you get four rows.</div>
   <div class="dockin">
     <div class="clock" id="clock">0:00</div>
     <div class="dockbtns">
-      <button type="button" class="dockbtn" id="t90">90s</button>
-      <button type="button" class="dockbtn" id="t120">2:00</button>
+      <button type="button" class="dockbtn prime" id="tpre">Rest</button>
       <button type="button" class="dockbtn" id="t30">+30</button>
       <button type="button" class="dockbtn" id="tstop">Stop</button>
     </div>
     <div class="prog" id="prog">0/0</div>
   </div>
+  <div class="restwho" id="restwho"></div>
 </div>
 
 <script>
@@ -271,6 +304,40 @@ function setCount(scheme){
   return Math.min(n, 8);
 }
 
+/* Rest parsing. Accepts 150 s · 150sec · 2:30 · 2 min · 1.5 min.
+   A bare number is NOT accepted here — too easy to eat a target. */
+function parseDur(s){
+  var t = trim(s).toLowerCase();
+  if (!t) return 0;
+  var mc = t.match(/^(\d{1,2}):([0-5]\d)$/);
+  if (mc) return parseInt(mc[1], 10) * 60 + parseInt(mc[2], 10);
+  var mm = t.match(/^(\d+(?:\.\d+)?)\s*(?:m|min|mins|minute|minutes)$/);
+  if (mm) return Math.round(parseFloat(mm[1]) * 60);
+  var ms = t.match(/^(\d{1,4})\s*(?:s|sec|secs|second|seconds)$/);
+  if (ms) return parseInt(ms[1], 10);
+  return 0;
+}
+
+/* Pull "rest 90s" / "rest: 2:30" out of free text. Returns {sec, text}. */
+function extractRest(txt){
+  var s = String(txt || '');
+  var m = s.match(/\brest\s*[:=-]?\s*(\d{1,2}:[0-5]\d|\d+(?:\.\d+)?\s*(?:s|sec|secs|second|seconds|m|min|mins|minute|minutes)\b)/i);
+  if (!m) return { sec: 0, text: s };
+  var sec = parseDur(m[1]);
+  if (!sec) return { sec: 0, text: s };
+  return { sec: sec, text: trim(s.replace(m[0], ' ').replace(/\s{2,}/g, ' ').replace(/^[—–\-,;.\s]+|[—–\-,;.\s]+$/g, '')) };
+}
+
+/* Fallback when the sheet says nothing: heavier rep ranges rest longer. */
+function defaultRest(scheme){
+  var m = String(scheme).match(/[x×]\s*(\d+)/i);
+  var reps = m ? parseInt(m[1], 10) : 10;
+  if (reps <= 6) return 150;
+  if (reps <= 8) return 120;
+  if (reps <= 12) return 90;
+  return 60;
+}
+
 function applyGate(out, txt){
   var s = String(txt);
   var th = s.match(/(?:below|under|less than|<)\s*(\d+)/i);
@@ -287,6 +354,14 @@ function applyGate(out, txt){
   nums.forEach(function(n){ if (out.gateItems.indexOf(n) < 0) out.gateItems.push(n); });
 }
 
+/* One WARM-UP: line can carry several moves. Split on "  /  ", " | ", or newline. */
+function splitWarm(v){
+  return String(v)
+    .split(/\s{2,}\/\s{2,}|\s+\|\s+|\r?\n/)
+    .map(function(x){ return trim(x).replace(/^[-•*•]\s*/, ''); })
+    .filter(function(x){ return x.length > 0; });
+}
+
 function toItem(cells, raw){
   var n = null, rest = cells.slice();
 
@@ -300,6 +375,15 @@ function toItem(cells, raw){
 
   var si = -1;
   for (var i = 0; i < rest.length; i++){ if (isScheme(rest[i])){ si = i; break; } }
+
+  /* A trailing cell that is purely a duration is the REST column. Only ever
+     taken from AFTER the scheme, so a bare target can never be eaten. */
+  var restSec = 0;
+  if (si >= 0 && rest.length > si + 1){
+    var lastIdx = rest.length - 1;
+    var d = parseDur(rest[lastIdx]);
+    if (d > 0){ restSec = d; rest = rest.slice(0, lastIdx); }
+  }
 
   var name, scheme, target;
   if (si >= 0){
@@ -323,15 +407,24 @@ function toItem(cells, raw){
   }
 
   if (!name) return null;
+
+  /* Secondary source: "rest 90s" written inside the target note. */
+  if (!restSec){
+    var er = extractRest(target);
+    if (er.sec){ restSec = er.sec; target = er.text; }
+  }
+
   var gated = /\[gate\]|\(gate\)/i.test(name + ' ' + target);
   name = name.replace(/\[gate\]|\(gate\)/ig, '').trim();
   target = target.replace(/\[gate\]|\(gate\)/ig, '').trim();
 
-  return { n: n, name: name, scheme: scheme, sets: setCount(scheme), target: target, gated: gated };
+  return { n: n, name: name, scheme: scheme, sets: setCount(scheme),
+           target: target, gated: gated, rest: restSec };
 }
 
 function parseSheet(text){
-  var out = { title:'', date:'', gateThreshold:7, gateItems:[], warmup:[], conditioning:'', items:[] };
+  var out = { title:'', date:'', gateThreshold:7, gateItems:[], warmup:[],
+              conditioning:'', restDefault:0, items:[] };
   var lines = String(text).split(/\r?\n/);
   var autoN = 0;
 
@@ -348,9 +441,10 @@ function parseSheet(text){
       if (k === 'title' || k === 'session'){ out.title = v; continue; }
       if (k === 'date'){ out.date = v; continue; }
       if (k === 'gate' || k === 'shouldergate'){ applyGate(out, v); continue; }
-      if (k === 'warmup'){ out.warmup.push(v); continue; }
+      if (k === 'warmup'){ out.warmup = out.warmup.concat(splitWarm(v)); continue; }
       if (k === 'conditioning' || k === 'cardio'){ out.conditioning = v; continue; }
-      if (k === 'note' || k === 'notes'){ out.warmup.push(v); continue; }
+      if (k === 'rest' || k === 'restdefault'){ out.restDefault = parseDur(v) || 0; continue; }
+      if (k === 'note' || k === 'notes'){ out.warmup = out.warmup.concat(splitWarm(v)); continue; }
     }
 
     var cells = splitCells(raw);
@@ -368,16 +462,116 @@ function parseSheet(text){
     }
 
     if (!out.title){ out.title = raw; continue; }
-    out.warmup.push(raw);
+    out.warmup = out.warmup.concat(splitWarm(raw));
   }
 
-  out.items.forEach(function(i){ if (out.gateItems.indexOf(i.n) >= 0) i.gated = true; });
+  out.items.forEach(function(i){
+    if (out.gateItems.indexOf(i.n) >= 0) i.gated = true;
+    if (!i.rest) i.rest = out.restDefault || defaultRest(i.scheme);
+  });
   return out;
 }
 /* PARSER-END */
 
 /* ============================ STORAGE ============================ */
 var IDX = 'rb:index', LAST = 'rb:last', mem = {};
+
+/* ============================ v5: PERFORMED-TIME STAMPS ============================
+   v4 and earlier recorded NO time of performance. The only date in the app was
+   session.date, which is the date typed into the sheet's DATE: header — the date
+   the session was PLANNED for. When a session slid a day, the summary still
+   reported the planned date and there was no way to tell from the log when the
+   work was actually done. That produced a real argument about what happened when.
+   v5 records three real timestamps on the log and emits them in the summary. */
+
+function nowMs(){ return Date.now(); }
+
+/* Cheap stable hash of everything the user has actually entered. Used to tell a
+   genuine edit from a heartbeat save, so finishedAt tracks the last real logged
+   set rather than the last time the page happened to write itself out. */
+function logFingerprint(log){
+  var s = '', k, keys;
+  keys = Object.keys(log.vals || {}).sort();
+  for (k = 0; k < keys.length; k++) s += keys[k] + '=' + log.vals[keys[k]] + ';';
+  keys = Object.keys(log.ticks || {}).sort();
+  for (k = 0; k < keys.length; k++) if (log.ticks[keys[k]]) s += 't' + keys[k] + ';';
+  keys = Object.keys(log.warmTicks || {}).sort();
+  for (k = 0; k < keys.length; k++) if (log.warmTicks[keys[k]]) s += 'w' + keys[k] + ';';
+  keys = Object.keys(log.skipped || {}).sort();
+  for (k = 0; k < keys.length; k++) if (log.skipped[keys[k]]) s += 's' + keys[k] + ';';
+  s += 'p' + log.pre + 'q' + log.post + 'c' + (log.cond ? 1 : 0);
+  var h = 5381;
+  for (k = 0; k < s.length; k++) h = ((h * 33) ^ s.charCodeAt(k)) >>> 0;
+  return h + ':' + s.length;
+}
+
+/* Has the user entered anything at all yet? An empty sheet must not claim a
+   start time just because it was opened. */
+function logHasContent(log){
+  var k;
+  for (k in log.vals) if (log.vals[k]) return true;
+  for (k in log.ticks) if (log.ticks[k]) return true;
+  for (k in log.warmTicks) if (log.warmTicks[k]) return true;
+  for (k in log.skipped) if (log.skipped[k]) return true;
+  if (log.pre !== null || log.post !== null || log.cond) return true;
+  if (log.notes) return true;
+  return false;
+}
+
+/* A stamp is earned by a CHANGE, never by a save. Saves happen constantly —
+   heartbeat, blur, visibilitychange, and once more every time an old session is
+   merely opened. If mere saving could stamp, then opening a session from three
+   days ago would relabel it as performed today, which is the exact failure this
+   version exists to prevent. So: compare the fingerprint, and only a real edit
+   moves anything. */
+function touchStamps(log){
+  var t = nowMs();
+  log.savedAt = t;
+  if (typeof log.fp !== 'string') log.fp = '';
+  var fp = logFingerprint(log);
+  if (fp === log.fp) return;
+  log.fp = fp;
+  if (!logHasContent(log)) return;
+  if (!log.startedAt) log.startedAt = t;
+  log.finishedAt = t;
+}
+
+/* v5: the on-screen date line. Shows the sheet date, and once anything has been
+   logged, the day it is actually being performed — so a drift is visible while
+   he is still standing at the machine, not three days later in a chat. */
+function renderStampLine(){
+  var el = document.getElementById('tDate');
+  if (!el || !session) return;
+  var log = session.log, txt = session.date || '';
+  if (log.startedAt){
+    var d = fmtDay(log.startedAt);
+    txt = txt ? txt + '  ·  performed ' + d : 'Performed ' + d;
+    if (session.date && d.indexOf(session.date) < 0 && session.date.indexOf(d) < 0) txt += '  ⚠ different day';
+  }
+  el.textContent = txt;
+}
+
+function fmtDay(ms){
+  if (!ms) return '';
+  return new Date(ms).toLocaleDateString([], {weekday:'long', month:'long', day:'numeric', year:'numeric'});
+}
+function fmtClock(ms){
+  if (!ms) return '';
+  return new Date(ms).toLocaleTimeString([], {hour:'numeric', minute:'2-digit'});
+}
+function fmtSpan(a, b){
+  if (!a || !b || b < a) return '';
+  var m = Math.round((b - a) / 60000);
+  if (m < 1) return 'under a minute';
+  var h = Math.floor(m / 60);
+  return h ? h + 'h ' + (m % 60) + 'm' : m + 'm';
+}
+/* True when the session crossed midnight — then the finish needs its own date. */
+function sameDay(a, b){
+  if (!a || !b) return true;
+  var x = new Date(a), y = new Date(b);
+  return x.getFullYear() === y.getFullYear() && x.getMonth() === y.getMonth() && x.getDate() === y.getDate();
+}
 
 function rawGet(key){
   return new Promise(function(res){
@@ -393,14 +587,18 @@ function rawGet(key){
 }
 function rawSet(key, val){
   return new Promise(function(res){
+    /* v4: localStorage FIRST and synchronously, every time. It is the only
+       write that is guaranteed to land before iOS suspends the app. Any
+       async mirror runs after, and its failure can no longer lose data. */
+    var okLocal = lsSet(key, val);
     try{
       if (window.storage && window.storage.set){
-        window.storage.set(key, val).then(function(){ stamp(); res(true); })
-                                    .catch(function(){ res(lsSet(key, val)); });
+        window.storage.set(key, val).then(function(){ res(true); })
+                                    .catch(function(){ res(okLocal); });
         return;
       }
     }catch(e){}
-    res(lsSet(key, val));
+    res(okLocal);
   });
 }
 function lsGet(k){ try{ return window.localStorage.getItem(k); }catch(e){ return mem[k] || null; } }
@@ -410,7 +608,12 @@ function lsSet(k, v){
 }
 function jget(k){ return rawGet(k).then(function(v){ try{ return v ? JSON.parse(v) : null; }catch(e){ return null; } }); }
 function jset(k, o){ return rawSet(k, JSON.stringify(o)); }
-function note(t){ var e = document.getElementById('savedline'); if (e) e.textContent = t; }
+function note(t, dirty){
+  var e = document.getElementById('savedline');
+  if (!e) return;
+  e.textContent = t;
+  e.classList.toggle('dirty', !!dirty);
+}
 function stamp(){ note('Saved ' + new Date().toLocaleTimeString([], {hour:'numeric', minute:'2-digit'})); }
 
 /* ============================ STATE ============================ */
@@ -418,6 +621,7 @@ var session = null, index = [], saveT = null;
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){
   return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 function $(id){ return document.getElementById(id); }
+function fmtSec(s){ return Math.floor(s / 60) + ':' + (s % 60 < 10 ? '0' : '') + (s % 60); }
 
 function show(which){
   ['Paste','Saved','Track'].forEach(function(v){
@@ -429,13 +633,36 @@ function show(which){
   window.scrollTo(0, 0);
 }
 
+/* v4 — THE FIX.
+   v3 wrote on a 400 ms debounce and nothing flushed it when the app went
+   away. Type a number into the last item, put the phone in your pocket, and
+   iOS suspends the page before the timer fires: that entry is gone and the
+   summary under-reports a set that was actually done (Sep 3, heel drop).
+   Now: every keystroke marks the session dirty and shows it, the write is
+   forced on blur, on Enter, on background, on hide, and on unload, and the
+   debounce is short. saveNow() is synchronous into localStorage. */
+var dirty = false;
+
+function markDirty(){
+  dirty = true;
+  note('Unsaved…', true);
+}
+
+function saveNow(){
+  clearTimeout(saveT); saveT = null;
+  if (!session) return;
+  collect();
+  touchStamps(session.log);   /* v5: stamp before the write, never after */
+  var payload = JSON.stringify(session);
+  try{ window.localStorage.setItem('rb:s:' + session.id, payload); dirty = false; stamp(); renderStampLine(); touchIndexStamps(session); }
+  catch(e){ mem['rb:s:' + session.id] = payload; note('Held in this tab only — copy the summary before closing.', true); }
+  try{ if (window.storage && window.storage.set) window.storage.set('rb:s:' + session.id, payload); }catch(e2){}
+}
+
 function save(){
+  markDirty();
   clearTimeout(saveT);
-  saveT = setTimeout(function(){
-    if (!session) return;
-    collect();
-    jset('rb:s:' + session.id, session);
-  }, 400);
+  saveT = setTimeout(saveNow, 250);
 }
 
 function collect(){
@@ -463,9 +690,31 @@ function buildFrom(text){
     gateItems: p.gateItems,
     warmup: p.warmup,
     conditioning: p.conditioning,
+    restDefault: p.restDefault,
     items: p.items,
-    log: { pre:null, post:null, cond:false, notes:'', vals:{}, ticks:{}, notesById:{}, skipped:{}, extra:{} }
+    log: { pre:null, post:null, cond:false, notes:'', vals:{}, ticks:{},
+           warmTicks:{}, notesById:{}, skipped:{}, extra:{},
+           /* v5 */ startedAt:null, finishedAt:null, savedAt:null, fp:'' }
   };
+}
+
+/* Older saved sessions predate warmTicks and per-item rest. */
+function migrate(s){
+  if (!s.log.extra) s.log.extra = {};
+  if (!s.log.warmTicks) s.log.warmTicks = {};
+  /* v5: sessions saved by v4 and earlier carry no stamps. Leave them null rather
+     than inventing one — an unknown performed time must read as unknown. */
+  if (!('startedAt' in s.log)) s.log.startedAt = null;
+  if (!('finishedAt' in s.log)) s.log.finishedAt = null;
+  if (!('savedAt' in s.log)) s.log.savedAt = null;
+  /* Always recompute the fingerprint from what was actually loaded, rather than
+     trusting the stored one. This is what makes opening a session a no-op: the
+     first save after a load matches, so no stamp moves. */
+  s.log.fp = logFingerprint(s.log);
+  if (!s.warmup) s.warmup = [];
+  if (s.warmup.length === 1) s.warmup = splitWarm(s.warmup[0]);
+  s.items.forEach(function(i){ if (!i.rest) i.rest = s.restDefault || defaultRest(i.scheme); });
+  return s;
 }
 
 /* ============================ RENDER ============================ */
@@ -478,7 +727,7 @@ function chipsHtml(which){
 function renderSession(){
   $('brand').textContent = session.title;
   $('tTitle').textContent = session.title;
-  $('tDate').textContent = session.date;
+  renderStampLine();
 
   var gated = session.items.filter(function(i){ return i.gated; }).map(function(i){ return i.n; });
   $('gateBox').classList.toggle('hide', gated.length === 0);
@@ -489,8 +738,13 @@ function renderSession(){
   $('preChips').innerHTML = chipsHtml('pre');
   $('postChips').innerHTML = chipsHtml('post');
 
+  /* WARM-UP — one tickable row per line */
   $('warmWrap').classList.toggle('hide', !session.warmup.length);
-  $('warmBox').innerHTML = session.warmup.map(esc).join('<br>');
+  $('warmList').innerHTML = session.warmup.map(function(w, i){
+    return '<div class="warmrow" data-wtick="' + i + '">' +
+      '<button type="button" class="wtick" data-wtick="' + i + '">○</button>' +
+      '<div class="wtxt">' + esc(w) + '</div></div>';
+  }).join('');
 
   $('condBox').classList.toggle('hide', !session.conditioning);
   $('condText').textContent = session.conditioning;
@@ -512,9 +766,11 @@ function renderSession(){
       '<div class="ihead" data-head="' + it.n + '">' +
         '<div class="num">' + it.n + '</div><div class="iname">' +
           '<h3>' + esc(it.name) + '</h3>' +
-          '<div class="scheme">' + esc(it.scheme) + '</div>' +
+          '<div class="scheme">' + esc(it.scheme) +
+            '<span class="rst">   ·   rest ' + fmtSec(it.rest) + '</span></div>' +
           (it.target ? '<div class="target">' + esc(it.target) + '</div>' : '') +
           '<div class="lockflag">Locked by the shoulder gate</div>' +
+          '<div class="partflag">Part logged — finish or tick every set</div>' +
         '</div><div class="chev">▾</div></div>' +
       '<div class="sets">' + rows +
         '<div class="rowtools">' +
@@ -537,6 +793,7 @@ function renderSession(){
   });
   $('notes').value = log.notes || '';
   $('out').classList.remove('show');
+  $('warnbar').classList.remove('show');
   paint();
 }
 
@@ -565,6 +822,18 @@ function paint(){
     v.innerHTML = 'Go — run the sheet as written<span>All ' + session.items.length + ' items.</span>';
   }
 
+  /* warm-up ticks */
+  var wdone = 0;
+  Array.prototype.forEach.call(document.querySelectorAll('.warmrow'), function(row){
+    var on = !!log.warmTicks[row.dataset.wtick];
+    row.classList.toggle('on', on);
+    var b = row.querySelector('.wtick');
+    b.classList.toggle('on', on);
+    b.textContent = on ? '✓' : '○';
+    if (on) wdone++;
+  });
+  if (session.warmup.length) $('warmCnt').textContent = wdone + '/' + session.warmup.length;
+
   var done = 0, active = 0;
   Array.prototype.forEach.call(document.querySelectorAll('.item'), function(card){
     var n = card.dataset.item;
@@ -582,6 +851,17 @@ function paint(){
       if (!on) all = false;
     });
     card.classList.toggle('done', all && !isLocked && !isSkip);
+
+    /* v4: an item with some sets filled and some empty is flagged on the
+       card itself, not only in the copied summary. */
+    var filled = 0, rowsN = 0;
+    Array.prototype.forEach.call(card.querySelectorAll('.setrow'), function(row, i){
+      rowsN++;
+      var wv = row.querySelector('[data-f="w"]').value, rv = row.querySelector('[data-f="r"]').value;
+      if (wv || rv || log.ticks[n + '-' + (i + 1)]) filled++;
+    });
+    card.classList.toggle('partial', !isLocked && !isSkip && filled > 0 && filled < rowsN);
+
     var sb = card.querySelector('[data-skip]');
     if (sb) sb.textContent = isSkip ? 'un-skip' : 'skipped';
     if (!isLocked && !isSkip){ active++; if (all) done++; }
@@ -596,36 +876,105 @@ function paint(){
 /* ============================ SAVED LIST ============================ */
 function renderSaved(){
   if (!index.length){
-    $('savedList').innerHTML = '<div class="warmup">Nothing saved yet. Paste a sheet and it lands here.</div>';
+    $('savedList').innerHTML = '<div class="warmrow"><div class="wtxt">Nothing saved yet. Paste a sheet and it lands here.</div></div>';
     return;
   }
   $('savedList').innerHTML = index.map(function(s){
     return '<div class="srow' + (session && session.id === s.id ? ' cur' : '') + '">' +
-      '<div class="st"><h4>' + esc(s.title) + '</h4><div class="sd">' + esc(s.date) + '</div></div>' +
+      '<div class="st"><h4>' + esc(s.title) + '</h4><div class="sd">' +
+        esc(s.startedAt ? fmtDay(s.startedAt) : (s.date || '')) +
+        (s.startedAt ? ' · ' + esc(fmtClock(s.startedAt)) : '') + '</div></div>' +
       '<button type="button" class="navbtn" data-open="' + s.id + '">Open</button></div>';
   }).join('');
 }
 
 function pushIndex(s){
   index = index.filter(function(x){ return x.id !== s.id; });
-  index.unshift({ id: s.id, title: s.title, date: s.date });
+  index.unshift({ id: s.id, title: s.title, date: s.date,
+                  startedAt: s.log.startedAt || null, savedAt: s.log.savedAt || null });
   index = index.slice(0, 40);
   jset(IDX, index);
   rawSet(LAST, s.id);
 }
 
+/* v5: keep the saved-sessions list honest about when each session was performed,
+   without writing the index on every heartbeat. Once a minute is plenty. */
+var lastIdxWrite = 0;
+function touchIndexStamps(s){
+  var rec = null, i;
+  for (i = 0; i < index.length; i++) if (index[i].id === s.id){ rec = index[i]; break; }
+  if (!rec) return;
+  var changed = (rec.startedAt !== (s.log.startedAt || null));
+  if (!changed && nowMs() - lastIdxWrite < 60000) return;
+  rec.startedAt = s.log.startedAt || null;
+  rec.savedAt = s.log.savedAt || null;
+  lastIdxWrite = nowMs();
+  jset(IDX, index);
+  renderSaved();
+}
+
+/* ============================ TIMER ============================ */
+var restEnd = 0, iv = null, lastRestSec = 90, autoT = null, lastAutoKey = '';
+
+function left(){ return Math.max(0, Math.round((restEnd - Date.now()) / 1000)); }
+
+function itemRest(n){
+  if (!session) return 90;
+  var it = null;
+  session.items.forEach(function(x){ if (String(x.n) === String(n)) it = x; });
+  return (it && it.rest) || session.restDefault || 90;
+}
+
+function startRest(sec, whoText){
+  if (!(sec > 0)) sec = lastRestSec || 90;
+  lastRestSec = sec;
+  restEnd = Date.now() + sec * 1000;
+  if (!iv) iv = setInterval(tickClock, 250);
+  $('restwho').textContent = whoText || '';
+  $('tpre').textContent = fmtSec(sec);
+  tickClock();
+}
+
+function tickClock(){
+  var c = $('clock'), l = left();
+  c.textContent = fmtSec(l);
+  c.classList.toggle('rest', l > 0);
+  if (l === 0 && iv){
+    clearInterval(iv); iv = null;
+    $('restwho').textContent = 'Rest done';
+    if (navigator.vibrate) navigator.vibrate([180, 90, 180]);
+  }
+}
+
+/* Auto-start rest once a set has a rep count. Debounced so typing "12"
+   does not fire on "1". Re-firing for the same set is suppressed. */
+function autoRest(el){
+  var n = el.dataset.i, s = el.dataset.s;
+  var row = el.closest('.setrow');
+  if (!row) return;
+  var rv = row.querySelector('[data-f="r"]').value;
+  var key = n + '-' + s + ':' + rv;
+  if (!trim(rv)) { return; }
+  if (key === lastAutoKey) return;
+  lastAutoKey = key;
+  var card = el.closest('.item');
+  var nm = card ? card.querySelector('h3').textContent : '';
+  startRest(itemRest(n), 'Rest after ' + nm + ' S' + s);
+}
+
 /* ============================ EVENTS ============================ */
 document.addEventListener('click', function(e){
-  var el = e.target.closest('[data-chip],[data-tick],[data-head],[data-add],[data-skip],[data-open],' +
-    '#condBtn,#copyBtn,#buildBtn,#exampleBtn,#navNew,#navSaved,#delBtn,#t90,#t120,#t30,#tstop');
+  var el = e.target.closest('[data-chip],[data-tick],[data-wtick],[data-head],[data-add],[data-skip],[data-open],' +
+    '#condBtn,#copyBtn,#buildBtn,#exampleBtn,#navNew,#navSaved,#delBtn,#tpre,#t30,#tstop');
   if (!el) return;
 
-  if (el.id === 'navNew'){ show('paste'); return; }
-  if (el.id === 'navSaved'){ renderSaved(); show('saved'); return; }
+  if (el.id === 'navNew'){ if (session) saveNow(); show('paste'); return; }
+  if (el.id === 'navSaved'){ if (session) saveNow(); renderSaved(); show('saved'); return; }
 
   if (el.id === 'exampleBtn'){ $('pasteBox').value = EXAMPLE; return; }
 
   if (el.id === 'buildBtn'){
+    if (session) saveNow();
     var s = buildFrom($('pasteBox').value);
     if (!s){
       $('pasteErr').textContent = 'No movements found. Each movement needs a name and a "3 x 8" on the same line.';
@@ -642,10 +991,10 @@ document.addEventListener('click', function(e){
   }
 
   if (el.dataset.open){
+    if (session) saveNow();
     jget('rb:s:' + el.dataset.open).then(function(s){
       if (!s) return;
-      session = s;
-      if (!session.log.extra) session.log.extra = {};
+      session = migrate(s);
       rawSet(LAST, s.id);
       renderSession();
       show('track');
@@ -667,16 +1016,29 @@ document.addEventListener('click', function(e){
   if (!session) return;
   var log = session.log;
 
+  /* Every state change below is written straight through — no debounce.
+     These are the actions most likely to be the last thing you touch. */
   if (el.dataset.chip){
     var w = el.dataset.chip, val = parseInt(el.dataset.val, 10);
     log[w] = (log[w] === val ? null : val);
-    paint(); save(); return;
+    paint(); saveNow(); return;
+  }
+  /* WARM-UP tick — the whole row is a hit target, not just the button */
+  if (el.dataset.wtick !== undefined && el.dataset.wtick !== ''){
+    var wk = el.dataset.wtick;
+    log.warmTicks[wk] = !log.warmTicks[wk];
+    paint(); saveNow(); return;
   }
   if (el.dataset.tick){
     var k = el.dataset.tick;
     log.ticks[k] = !log.ticks[k];
-    if (log.ticks[k]) startRest(90);
-    paint(); save(); return;
+    if (log.ticks[k]){
+      var parts = k.split('-');
+      var c2 = document.querySelector('.item[data-item="' + parts[0] + '"]');
+      var nm2 = c2 ? c2.querySelector('h3').textContent : '';
+      startRest(itemRest(parts[0]), 'Rest after ' + nm2 + ' S' + parts[1]);
+    }
+    paint(); saveNow(); return;
   }
   if (el.dataset.head){
     var card = el.closest('.item');
@@ -690,67 +1052,125 @@ document.addEventListener('click', function(e){
     renderSession();
     var c = document.querySelector('.item[data-item="' + n + '"]');
     if (c) c.classList.add('open');
-    save(); return;
+    saveNow(); return;
   }
   if (el.dataset.skip){
     log.skipped[el.dataset.skip] = !log.skipped[el.dataset.skip];
-    paint(); save(); return;
+    paint(); saveNow(); return;
   }
-  if (el.id === 'condBtn'){ log.cond = !log.cond; paint(); save(); return; }
+  if (el.id === 'condBtn'){ log.cond = !log.cond; paint(); saveNow(); return; }
   if (el.id === 'copyBtn'){ summary(); return; }
-  if (el.id === 't90'){ startRest(90); return; }
-  if (el.id === 't120'){ startRest(120); return; }
-  if (el.id === 't30'){ startRest(left() + 30); return; }
-  if (el.id === 'tstop'){ restEnd = 0; tickClock(); return; }
+  if (el.id === 'tpre'){ startRest(lastRestSec, 'Rest'); return; }
+  if (el.id === 't30'){ startRest(left() + 30, $('restwho').textContent); return; }
+  if (el.id === 'tstop'){ restEnd = 0; $('restwho').textContent = ''; tickClock(); return; }
 });
 
 document.addEventListener('input', function(e){
-  if (e.target.matches('[data-f],[data-note],#notes')) save();
+  if (e.target.matches('[data-f],[data-note],#notes')){ save(); paint(); }
+  if (e.target.matches('[data-f="r"]')){
+    clearTimeout(autoT);
+    var el = e.target;
+    autoT = setTimeout(function(){ autoRest(el); }, 1100);
+  }
 });
 
-/* ============================ TIMER ============================ */
-var restEnd = 0, iv = null;
-function left(){ return Math.max(0, Math.round((restEnd - Date.now()) / 1000)); }
-function startRest(sec){
-  restEnd = Date.now() + sec * 1000;
-  if (!iv) iv = setInterval(tickClock, 250);
-  tickClock();
-}
-function tickClock(){
-  var c = $('clock'), l = left();
-  c.textContent = Math.floor(l / 60) + ':' + (l % 60 < 10 ? '0' : '') + (l % 60);
-  c.classList.toggle('rest', l > 0);
-  if (l === 0 && iv){ clearInterval(iv); iv = null; if (navigator.vibrate) navigator.vibrate([180, 90, 180]); }
-}
+/* Blur or Enter fires the rest immediately, no wait for the debounce. */
+document.addEventListener('change', function(e){
+  if (e.target.matches('[data-f],[data-note],#notes')) saveNow();
+  if (e.target.matches('[data-f="r"]')){ clearTimeout(autoT); autoRest(e.target); }
+});
+
+/* v4 — FORCED WRITES. Any one of these is enough to keep the last number. */
+document.addEventListener('blur', function(e){
+  if (e.target && e.target.matches && e.target.matches('[data-f],[data-note],#notes')) saveNow();
+}, true);
+
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Enter' && e.target && e.target.matches && e.target.matches('[data-f]')){
+    e.target.blur();
+    saveNow();
+  }
+});
+
+document.addEventListener('visibilitychange', function(){
+  if (document.visibilityState === 'hidden') saveNow();
+});
+window.addEventListener('pagehide', saveNow);
+window.addEventListener('beforeunload', saveNow);
+window.addEventListener('blur', saveNow);
+/* Belt and braces: a slow heartbeat catches anything the events miss. */
+setInterval(function(){ if (dirty) saveNow(); }, 5000);
 
 /* ============================ SUMMARY ============================ */
 function summary(){
-  collect();
+  saveNow();
   var log = session.log;
   var locked = (log.pre !== null && log.pre < session.gateThreshold);
-  var L = [];
-  L.push(session.title.toUpperCase() + ' — ' + session.date);
+  var L = [], gaps = [];
+  L.push(session.title.toUpperCase());
+
+  /* v5: the performed date leads, the sheet date follows. These are different
+     facts and conflating them is what caused the confusion this replaces. */
+  if (log.startedAt){
+    var line = 'PERFORMED: ' + fmtDay(log.startedAt) + ' — ' + fmtClock(log.startedAt);
+    if (log.finishedAt && log.finishedAt > log.startedAt){
+      line += ' to ' + (sameDay(log.startedAt, log.finishedAt)
+        ? fmtClock(log.finishedAt)
+        : fmtClock(log.finishedAt) + ' on ' + fmtDay(log.finishedAt));
+      var sp = fmtSpan(log.startedAt, log.finishedAt);
+      if (sp) line += ' (' + sp + ')';
+    }
+    L.push(line);
+  } else {
+    L.push('PERFORMED: not recorded — no sets were logged in the app.');
+  }
+  if (log.savedAt) L.push('SAVED: ' + fmtDay(log.savedAt) + ' at ' + fmtClock(log.savedAt));
+  if (session.date) L.push('SHEET WRITTEN FOR: ' + session.date);
+
   L.push('Shoulder PRE ' + (log.pre === null ? '—' : log.pre) + ' / POST ' + (log.post === null ? '—' : log.post) +
     (locked ? '  [GATE CLOSED]' : ''));
   L.push('');
+
+  if (session.warmup.length){
+    var wd = session.warmup.filter(function(w, i){ return !!log.warmTicks[i]; }).length;
+    L.push('Warm-up: ' + wd + '/' + session.warmup.length + ' done' +
+      (wd < session.warmup.length
+        ? ' — MISSED: ' + session.warmup.filter(function(w, i){ return !log.warmTicks[i]; }).join('; ')
+        : ''));
+    L.push('');
+  }
+
   Array.prototype.forEach.call(document.querySelectorAll('.item'), function(card){
     var n = card.dataset.item, name = card.querySelector('h3').textContent;
     if (locked && card.dataset.gated === '1'){ L.push(n + '. ' + name + ' — LOCKED OUT (gate)'); return; }
     var nt = log.notesById[n] ? '  (' + log.notesById[n] + ')' : '';
     if (log.skipped[n]){ L.push(n + '. ' + name + ' — SKIPPED' + nt); return; }
-    var parts = [];
-    Array.prototype.forEach.call(card.querySelectorAll('.setrow'), function(row, i){
+    var parts = [], rows = card.querySelectorAll('.setrow'), blanks = 0;
+    Array.prototype.forEach.call(rows, function(row, i){
       var wv = row.querySelector('[data-f="w"]').value, rv = row.querySelector('[data-f="r"]').value;
       if (wv || rv || log.ticks[n + '-' + (i + 1)]) parts.push((wv || 'BW') + ' × ' + (rv || '—'));
+      else blanks++;
     });
-    L.push(n + '. ' + name + ' — ' + (parts.length ? parts.join(', ') : 'not logged') + nt);
+    /* Blank sets used to vanish silently and under-report the session. */
+    var flag = (parts.length && blanks) ? '   [' + parts.length + ' of ' + rows.length + ' sets logged]' : '';
+    if (!parts.length || blanks) gaps.push(n + '. ' + name);
+    L.push(n + '. ' + name + ' — ' + (parts.length ? parts.join(', ') : 'not logged') + nt + flag);
   });
   L.push('');
   if (session.conditioning) L.push('Conditioning: ' + (log.cond ? 'done — ' + session.conditioning : 'NOT DONE'));
+  if (log.post === null) L.push('POST SHOULDER NOT RATED.');
   if (log.notes) L.push('Notes: ' + log.notes);
 
   var text = L.join('\n'), out = $('out');
   out.value = text; out.classList.add('show');
+
+  /* v4: say out loud what is missing BEFORE it gets pasted back. */
+  var wb = $('warnbar'), msgs = [];
+  if (gaps.length) msgs.push('Incomplete: ' + gaps.join('; ') + '. Fill or tick them, then copy again.');
+  if (log.post === null) msgs.push('POST shoulder not rated.');
+  if (msgs.length){ wb.textContent = msgs.join('  '); wb.classList.add('show'); }
+  else { wb.classList.remove('show'); }
+
   if (navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(text).then(function(){
       note('Copied. Paste it back into the chat.');
@@ -763,22 +1183,22 @@ var EXAMPLE = [
 'TITLE: Push A — Day 2',
 'DATE: Monday, August 31, 2026',
 'GATE: below 7 locks out items 1-4',
-'WARM-UP: Golf Forever + T-spine. Band pull-apart 2 x 15.',
+'WARM-UP: Golf Forever — it IS the warm-up  /  T-spine: foam roller extension 2 x 10, open book 2 x 10 each  /  Band pull-apart 2 x 15',
 'CONDITIONING: 8 x (30 sec hard / 90 sec easy) on the BIKE. Not running.',
 '',
-'1 | Barbell bench (Tonal) | 3 x 8 | Target 52 — from 49',
-'2 | Incline press | 3 x 10 | Target 42',
-'3 | Overhead press | 3 x 8 | HOLD at 22. Do not add weight.',
-'4 | Chest fly | 3 x 12 | Target 20',
-'5 | DB lateral raise | 3 x 12-15 | 12.5/hand. Body english on set 1 means drop to 10 and add reps.',
-'6 | Tricep pressdown | 3 x 12 | Target 35 — log the machine',
-'7 | Skullcrusher (DB) | 3 x 10 | Target 37.5',
-'8 | Face pull | 3 x 15 | Non-negotiable. Elbows high.',
-'9 | Prone IR / ER | 2 x 12 | AFTER pressing, never before.',
-'10 | Pallof press | 3 x 12 | Log the machine — number varies.',
-'11 | Weighted crunch | 3 x 15 | Target 27.5',
-'12 | Dead bug | 2 x 10 | Lumbar flat.',
-'13 | Eccentric heel drop | 3 x 15 | BODYWEIGHT — last unloaded day. 3 sec down.'
+'1 | Barbell bench (Tonal) | 3 x 8 | 52 TOTAL — up from 49 | 150 s',
+'2 | Incline press (Tonal) | 3 x 10 | 21 PER HAND (42 total) | 120 s',
+'3 | Overhead press (Tonal) | 3 x 8 | HOLD 22. Do not add weight. | 120 s',
+'4 | Chest fly (Tonal) | 3 x 12 | 10 PER HAND (20 total) | 90 s',
+'5 | Lateral raise (Tonal) | 3 x 12-15 | 5 PER HAND — Tonal number, not the DB one | 75 s',
+'6 | Tricep pressdown | 3 x 12 | 35 — log the machine | 75 s',
+'7 | Skullcrusher (Tonal barbell) | 3 x 10 | 40 | 90 s',
+'8 | Face pull | 3 x 15 | 35 — non-negotiable. Elbows high. | 60 s',
+'9 | Prone IR / ER | 2 x 12 | AFTER pressing, never before. | 45 s',
+'10 | Pallof press | 3 x 12 | 18 — half-kneeling | 60 s',
+'11 | Weighted crunch | 3 x 15 | 32.5 | 60 s',
+'12 | Dead bug | 2 x 10 | Lumbar flat. | 45 s',
+'13 | Eccentric heel drop | 3 x 15 | 30 TOTAL (15 per hand) — 3 sec down. | 60 s'
 ].join('\n');
 
 /* ============================ BOOT ============================ */
@@ -790,8 +1210,7 @@ jget(IDX).then(function(ix){
   if (!lastId) { show('paste'); return; }
   return jget('rb:s:' + lastId).then(function(s){
     if (!s || !s.items){ show('paste'); return; }
-    session = s;
-    if (!session.log.extra) session.log.extra = {};
+    session = migrate(s);
     renderSession();
     show('track');
   });
