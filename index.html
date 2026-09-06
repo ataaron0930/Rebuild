@@ -24,10 +24,20 @@
   .wrap{max-width:640px;margin:0 auto;padding:0 14px}
   .hide{display:none!important}
 
-  /* nav */
+  /* nav
+     v6 FIX: the app runs standalone with viewport-fit=cover and a translucent
+     status bar, so the document starts at y=0 — physically underneath the
+     clock, battery and wifi icons. This bar had a flat 10px of top padding and
+     was therefore drawn completely under the status bar and could not be
+     tapped, which locked the user into whichever session was already open with
+     no route back to Paste or Saved. The dock at the bottom always respected
+     env(safe-area-inset-bottom); the top inset was simply never handled.
+     Left and right insets are handled too, for landscape on a notched phone. */
   .nav{position:sticky;top:0;z-index:40;background:rgba(14,20,26,.97);
-    border-bottom:1px solid var(--line);padding:10px 0;margin-bottom:14px}
-  .navin{max-width:640px;margin:0 auto;padding:0 14px;display:flex;gap:8px;align-items:center}
+    border-bottom:1px solid var(--line);margin-bottom:14px;
+    padding:calc(10px + env(safe-area-inset-top)) 0 10px}
+  .navin{max-width:640px;margin:0 auto;display:flex;gap:8px;align-items:center;
+    padding:0 calc(14px + env(safe-area-inset-right)) 0 calc(14px + env(safe-area-inset-left))}
   .brand{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
     color:var(--amber);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .navbtn{background:var(--panel);border:1px solid var(--line);color:var(--tx);
