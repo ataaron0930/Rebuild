@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Protein">
+<meta name="theme-color" content="#0E141A">
+<link rel="apple-touch-icon" href="protein-icon.png">
+<title>Protein Count</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#F6F4F0; --surf:#FFFFFF; --surf2:#EFEBE4;
+    --ink:#16222C; --mut:#5E6B77; --line:#DED7CD;
+    --amber:#A86D14; --amber-soft:rgba(168,109,20,.13);
+    --go:#2C7A50; --go-soft:rgba(44,122,80,.12);
+    --warn:#B4472F; --warn-soft:rgba(180,71,47,.12);
+    --disp:"Barlow Semi Condensed",Arial Narrow,sans-serif;
+    --body:"Barlow",-apple-system,Segoe UI,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#0E141A; --surf:#18212A; --surf2:#131C24;
+      --ink:#E4EBF1; --mut:#8798A6; --line:#2A3742;
+      --amber:#E8A33D; --amber-soft:rgba(232,163,61,.15);
+      --go:#4FB477; --go-soft:rgba(79,180,119,.14);
+      --warn:#C4553D; --warn-soft:rgba(196,85,61,.16);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0E141A; --surf:#18212A; --surf2:#131C24;
+    --ink:#E4EBF1; --mut:#8798A6; --line:#2A3742;
+    --amber:#E8A33D; --amber-soft:rgba(232,163,61,.15);
+    --go:#4FB477; --go-soft:rgba(79,180,119,.14);
+    --warn:#C4553D; --warn-soft:rgba(196,85,61,.16);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);
+       font-size:15px;line-height:1.45;-webkit-text-size-adjust:100%}
+  .wrap{max-width:560px;margin:0 auto;padding:calc(18px + env(safe-area-inset-top)) 16px calc(60px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:18px}
+
+  .top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--amber)}
+  .date{font-family:var(--mono);font-size:11px;color:var(--mut);margin-left:auto}
+  h1{font-family:var(--disp);font-size:30px;font-weight:700;letter-spacing:.01em;
+     text-transform:uppercase;margin:0;line-height:1;text-wrap:balance}
+
+  .panel{background:var(--surf);border:1px solid var(--line);padding:16px}
+
+  .bignum{display:flex;align-items:flex-end;gap:12px}
+  .bignum .n{font-family:var(--mono);font-size:54px;font-weight:600;line-height:.9;
+             letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .bignum .unit{font-family:var(--disp);font-size:15px;text-transform:uppercase;
+                letter-spacing:.12em;color:var(--mut);padding-bottom:6px}
+  .bignum .state{margin-left:auto;font-family:var(--mono);font-size:11px;
+                 letter-spacing:.08em;text-transform:uppercase;padding:5px 9px;
+                 border:1px solid var(--line);color:var(--mut);white-space:nowrap}
+  .state.hit{color:var(--go);border-color:var(--go);background:var(--go-soft)}
+  .state.floor{color:var(--amber);border-color:var(--amber);background:var(--amber-soft)}
+
+  .track{position:relative;height:16px;background:var(--surf2);border:1px solid var(--line);margin-top:14px}
+  .fill{height:100%;background:var(--amber);width:0;transition:width .28s ease}
+  .fill.hit{background:var(--go)}
+  .tick{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--ink);opacity:.45;left:94.4%}
+  .scale{display:flex;justify-content:space-between;font-family:var(--mono);
+         font-size:10px;color:var(--mut);margin-top:5px;letter-spacing:.05em}
+
+  .cost{display:flex;align-items:center;gap:9px;margin-top:14px;padding-top:13px;
+        border-top:1px solid var(--line);flex-wrap:wrap}
+  .cost .cv{font-family:var(--mono);font-size:19px;font-weight:600;font-variant-numeric:tabular-nums}
+  .cost .cl{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;
+            text-transform:uppercase;color:var(--mut)}
+  .cost .sep{width:1px;align-self:stretch;background:var(--line);margin:0 3px}
+  .band{margin-left:auto;font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;
+        text-transform:uppercase;padding:4px 8px;border:1px solid var(--line);color:var(--mut)}
+  .band.cheap{color:var(--go);border-color:var(--go);background:var(--go-soft)}
+  .band.mid{color:var(--amber);border-color:var(--amber);background:var(--amber-soft)}
+  .band.dear{color:var(--warn);border-color:var(--warn);background:var(--warn-soft)}
+
+  .seclabel{font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;
+            text-transform:uppercase;color:var(--mut);display:flex;align-items:baseline;gap:8px;
+            border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:11px}
+  .seclabel .r{margin-left:auto;color:var(--amber);letter-spacing:.09em}
+
+  .chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(152px,1fr));gap:7px}
+  .chip{display:grid;grid-template-columns:1fr auto;gap:2px 8px;background:var(--surf2);
+        border:1px solid var(--line);color:var(--ink);font-family:var(--body);font-size:13.5px;
+        text-align:left;padding:9px 10px;cursor:pointer;line-height:1.2}
+  .chip:hover{border-color:var(--amber)}
+  .chip:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+  .chip .cg{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--amber);
+            font-variant-numeric:tabular-nums;text-align:right}
+  .chip .ck{font-family:var(--mono);font-size:10px;color:var(--mut);font-variant-numeric:tabular-nums}
+  .chip .ce{font-family:var(--mono);font-size:10px;text-align:right;font-variant-numeric:tabular-nums}
+  .ce.cheap{color:var(--go)} .ce.mid{color:var(--amber)} .ce.dear{color:var(--warn)}
+  .chip.bag{border-left:3px solid var(--amber)}
+
+  .custom{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap}
+  .custom input{background:var(--surf2);border:1px solid var(--line);
+    color:var(--ink);font-family:var(--body);font-size:16px;padding:10px;min-width:0}
+  .custom .lab{flex:1 1 100%}
+  .custom .num{flex:1 1 0;font-family:var(--mono)}
+  .custom input:focus{outline:none;border-color:var(--amber)}
+  .custom button{background:var(--amber);border:none;color:var(--bg);font-family:var(--disp);
+    font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;
+    padding:0 18px;cursor:pointer;flex:0 0 auto}
+
+  .entry{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .entry:last-child{border-bottom:none}
+  .entry .t{font-family:var(--mono);font-size:11px;color:var(--mut);flex:0 0 60px;font-variant-numeric:tabular-nums}
+  .entry .l{flex:1;min-width:0;font-size:14px}
+  .entry .l small{display:block;font-family:var(--mono);font-size:10px;color:var(--mut)}
+  .entry .g{font-family:var(--mono);font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+  .entry .x{background:none;border:1px solid var(--line);color:var(--mut);font-family:var(--mono);
+    font-size:13px;width:28px;height:28px;cursor:pointer;flex:0 0 auto}
+  .entry .x:hover{border-color:var(--warn);color:var(--warn)}
+  .empty{color:var(--mut);font-size:13.5px;padding:6px 0}
+
+  .feeds{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+  .feed{background:var(--surf2);border:1px solid var(--line);padding:10px 8px;text-align:center}
+  .feed.ok{border-color:var(--go);background:var(--go-soft)}
+  .feed .fn{font-family:var(--disp);font-size:11.5px;text-transform:uppercase;
+            letter-spacing:.07em;color:var(--mut);line-height:1.15}
+  .feed .fg{font-family:var(--mono);font-size:19px;font-weight:600;margin-top:5px;font-variant-numeric:tabular-nums}
+  .feed.ok .fg{color:var(--go)}
+
+  .hist{display:flex;align-items:flex-end;gap:5px;height:84px}
+  .bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;height:100%}
+  .bar .b{width:100%;background:var(--amber);opacity:.55;min-height:2px}
+  .bar .b.hit{background:var(--go);opacity:1}
+  .bar .b.none{background:var(--line);opacity:.6}
+  .bar .b.today{outline:1px solid var(--ink);outline-offset:1px}
+  .bar .d{font-family:var(--mono);font-size:9px;color:var(--mut)}
+  .stats{display:flex;gap:18px;margin-top:12px;flex-wrap:wrap}
+  .stat .sv{font-family:var(--mono);font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}
+  .stat .sl{font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--mut)}
+
+  .flag{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--mut);
+        background:var(--surf2);border:1px solid var(--line);padding:10px 12px;cursor:pointer}
+  .flag .box{width:17px;height:17px;border:1px solid var(--line);flex:0 0 auto;
+             display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px}
+  .flag.on{color:var(--amber);border-color:var(--amber)}
+  .flag.on .box{background:var(--amber);border-color:var(--amber);color:var(--bg)}
+
+  .ref{width:100%;border-collapse:collapse;font-size:13.5px}
+  .ref th{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+          color:var(--mut);text-align:left;padding:0 8px 7px 0;font-weight:500;border-bottom:1px solid var(--line)}
+  .ref th.n,.ref td.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .ref td{padding:7px 8px 7px 0;border-bottom:1px solid var(--line)}
+  .ref tr:last-child td{border-bottom:none}
+  .ref td.n{font-size:13px}
+  .ref .eff{font-weight:600}
+  .ref .eff.cheap{color:var(--go)} .ref .eff.mid{color:var(--amber)} .ref .eff.dear{color:var(--warn)}
+  .refnote{font-size:13px;color:var(--mut);margin:0 0 11px;line-height:1.5}
+
+  .bigbtn{width:100%;background:var(--amber);border:none;color:var(--bg);
+    font-family:var(--disp);font-size:16px;font-weight:700;text-transform:uppercase;
+    letter-spacing:.09em;padding:15px;cursor:pointer}
+  .out{width:100%;min-height:150px;display:none;background:var(--surf2);
+    border:1px solid var(--line);color:var(--ink);font-family:var(--mono);
+    font-size:12px;padding:11px;margin-top:9px;line-height:1.5}
+  .out.show{display:block}
+  footer{font-family:var(--mono);font-size:10px;color:var(--mut);text-align:center;line-height:1.7}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <span class="eyebrow">The Rebuild</span>
+    <span class="date" id="today"></span>
+  </div>
+  <h1>Protein Count</h1>
+
+  <section class="panel">
+    <div class="bignum">
+      <span class="n" id="left">180</span>
+      <span class="unit">g to go</span>
+      <span class="state" id="state">0 of 180</span>
+    </div>
+    <div class="track"><div class="fill" id="fill"></div><div class="tick" title="170 g floor"></div></div>
+    <div class="scale"><span>0</span><span>FLOOR 170</span><span>180 g</span></div>
+
+    <div class="cost">
+      <div><div class="cv" id="kcal">0</div><div class="cl">kcal from these</div></div>
+      <div class="sep"></div>
+      <div><div class="cv" id="eff">—</div><div class="cl">g per 100 kcal</div></div>
+      <span class="band" id="band">no data yet</span>
+    </div>
+  </section>
+
+  <section>
+    <div class="seclabel">Quick add <span class="r">amber bar = flight bag</span></div>
+    <div class="chips" id="chips"></div>
+    <div class="custom">
+      <input id="clabel" class="lab" placeholder="Something else" autocomplete="off">
+      <input id="cgrams" class="num" inputmode="numeric" placeholder="protein g">
+      <input id="ckcal" class="num" inputmode="numeric" placeholder="kcal">
+      <button id="cadd" type="button">Add</button>
+    </div>
+  </section>
+
+  <section>
+    <div class="seclabel">Four feedings <span class="r">40-50 g each</span></div>
+    <div class="feeds" id="feeds"></div>
+  </section>
+
+  <section class="panel">
+    <div class="seclabel">Today <span class="r" id="count"></span></div>
+    <div id="entries"></div>
+  </section>
+
+  <div class="flag" id="flying"><span class="box" id="flyingbox"></span> Flying day</div>
+
+  <section>
+    <div class="seclabel">Last 14 days <span class="r" id="avgnote"></span></div>
+    <div class="hist" id="hist"></div>
+    <div class="stats">
+      <div class="stat"><div class="sv" id="avg7">—</div><div class="sl">7-day avg g</div></div>
+      <div class="stat"><div class="sv" id="hit14">—</div><div class="sl">days at 180</div></div>
+      <div class="stat"><div class="sv" id="streak">—</div><div class="sl">streak over floor</div></div>
+      <div class="stat"><div class="sv" id="eff7">—</div><div class="sl">7-day g/100</div></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="seclabel">What protein costs <span class="r">g per 100 kcal</span></div>
+    <p class="refnote">180 g from the top of this list costs about 1,000 calories and leaves room for
+      the rest of the day. The same 180 g from the bottom costs about 2,000 and blows it.
+      Above 15 is cheap and you can eat it freely. Below 10 is for convenience, not for volume.</p>
+    <table class="ref">
+      <thead><tr><th>Food</th><th class="n">Protein</th><th class="n">kcal</th><th class="n">g/100</th></tr></thead>
+      <tbody id="reftable"></tbody>
+    </table>
+  </section>
+
+
+  <button class="bigbtn" id="copy7">Copy 7-day summary</button>
+  <textarea class="out" id="out" readonly></textarea>
+
+  <footer>
+    Target 180 g daily, floor 170. Calories shown are only what these foods cost,<br>
+    not a day's budget. The 7-day weight average is the calorie check.<br>
+    <span id="store">Saved on this phone</span><br>
+    <span id="diag">taps 0 · actions 0</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var GOAL=180, FLOOR=170;
+
+  var FOODS=[
+    {l:"Fairlife shake",g:30,k:150,bag:true},
+    {l:"Core Power 42",g:42,k:230,bag:true},
+    {l:"Whey scoop",g:25,k:120},
+    {l:"Protein bar",g:20,k:220,bag:true},
+    {l:"Meat stick",g:10,k:100,bag:true},
+    {l:"Chicken 6 oz",g:52,k:280},
+    {l:"Chicken 8 oz",g:70,k:375},
+    {l:"Sirloin 6 oz",g:50,k:340},
+    {l:"Ground beef 6 oz",g:46,k:340},
+    {l:"Salmon 6 oz",g:40,k:350},
+    {l:"Shrimp 6 oz",g:36,k:170},
+    {l:"Tuna pouch",g:28,k:130,bag:true},
+    {l:"Deli turkey 4 oz",g:24,k:120},
+    {l:"Cottage cheese 1 c",g:25,k:180},
+    {l:"Greek yogurt 1 c",g:23,k:130},
+    {l:"Eggs x3",g:19,k:215},
+    {l:"Egg whites 1 c",g:26,k:125}
+  ];
+
+  /* Reference list — the quick-add foods plus the ones worth knowing to avoid. */
+  var REF=FOODS.map(function(f){return {l:f.l,g:f.g,k:f.k};}).concat([
+    {l:"White fish 6 oz",g:40,k:190},
+    {l:"Ribeye 8 oz",g:55,k:700},
+    {l:"Cheese, 1 slice",g:7,k:110},
+    {l:"Whole milk 1 c",g:8,k:150},
+    {l:"Peanut butter 2 tbsp",g:7,k:190}
+  ]);
+
+  var SLOTS=[
+    {n:"Morning",from:0,to:11},
+    {n:"Midday",from:11,to:16},
+    {n:"Post-lift",from:16,to:21},
+    {n:"Pre-sleep",from:21,to:24}
+  ];
+
+  function $(id){return document.getElementById(id);}
+  function pad(n){return n<10?"0"+n:""+n;}
+  function key(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());}
+  function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];});}
+  function effOf(g,k){ return k>0?(g/k)*100:0; }
+  function bandOf(e){ return e>=15?"cheap":(e>=10?"mid":"dear"); }
+  function bandWord(e){ return e>=15?"cheap protein":(e>=10?"moderate":"expensive"); }
+
+  var TODAY=key(new Date());
+  var day={date:TODAY,goal:GOAL,entries:[],flying:false};
+  var history={};
+  var db=null;
+
+  $("today").textContent=new Date().toLocaleDateString([],
+    {weekday:"long",month:"long",day:"numeric"});
+
+  function lsGet(k){try{return JSON.parse(localStorage.getItem("protein:"+k));}catch(e){return null;}}
+  function lsSet(k,v){try{localStorage.setItem("protein:"+k,JSON.stringify(v));}catch(e){}}
+
+  function persist(){
+    lsSet(day.date,day);
+    history[day.date]=day;
+    if(db){ db.doc("days/"+day.date).set(day).catch(function(){}); }
+  }
+
+  function loadLocalHistory(){
+    var d=new Date();
+    for(var i=0;i<14;i++){
+      var k=key(d), v=lsGet(k);
+      if(v) history[k]=v;
+      d.setDate(d.getDate()-1);
+    }
+    var t=history[TODAY];
+    if(t){ day=t; day.entries=day.entries||[]; }
+  }
+
+  function sumG(e){ return (e||[]).reduce(function(a,x){return a+(+x.g||0);},0); }
+  function sumK(e){ return (e||[]).reduce(function(a,x){return a+(+x.k||0);},0); }
+
+  function renderToday(){
+    var t=sumG(day.entries), kc=sumK(day.entries);
+    $("left").textContent=Math.max(0,GOAL-t);
+    var fill=$("fill");
+    fill.style.width=Math.min(100,(t/GOAL)*100)+"%";
+    fill.classList.toggle("hit",t>=GOAL);
+
+    var st=$("state"); st.className="state";
+    if(t>=GOAL){ st.textContent="Target met — "+t+" g"; st.classList.add("hit"); }
+    else if(t>=FLOOR){ st.textContent="Over floor — "+t+" g"; st.classList.add("floor"); }
+    else { st.textContent=t+" of "+GOAL; }
+
+    $("kcal").textContent=kc?kc.toLocaleString():"0";
+    var e=effOf(t,kc);
+    $("eff").textContent=kc?e.toFixed(1):"—";
+    var b=$("band");
+    b.className="band";
+    if(!kc){ b.textContent="no data yet"; }
+    else {
+      b.classList.add(bandOf(e));
+      b.textContent=bandWord(e);
+    }
+
+    $("count").textContent=day.entries.length?day.entries.length+" logged":"";
+    $("entries").innerHTML=day.entries.length
+      ? day.entries.slice().sort(function(a,b){return a.ts-b.ts;}).map(function(x){
+          var tm=new Date(x.ts).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
+          return '<div class="entry"><span class="t">'+tm+'</span>'+
+            '<span class="l">'+esc(x.l)+(x.k?'<small>'+x.k+' kcal</small>':'')+'</span>'+
+            '<span class="g">'+x.g+' g</span>'+
+            '<button class="x" data-del="'+x.id+'" aria-label="Remove '+esc(x.l)+'">&times;</button></div>';
+        }).join("")
+      : '<div class="empty">Nothing logged yet. Tap a food above as you eat it.</div>';
+
+    $("feeds").innerHTML=SLOTS.map(function(s){
+      var g=day.entries.reduce(function(a,x){
+        var h=new Date(x.ts).getHours();
+        return a+((h>=s.from&&h<s.to)?(+x.g||0):0);
+      },0);
+      return '<div class="feed'+(g>=40?" ok":"")+'"><div class="fn">'+s.n+
+             '</div><div class="fg">'+g+'</div></div>';
+    }).join("");
+
+    $("flying").classList.toggle("on",!!day.flying);
+    $("flyingbox").textContent=day.flying?"✓":"";
+  }
+
+  function renderHistory(){
+    var days=[],d=new Date();
+    for(var i=0;i<14;i++){ days.unshift(key(d)); d.setDate(d.getDate()-1); }
+    var vals=days.map(function(k){
+      var rec=(k===TODAY)?day:history[k];
+      return {k:k,g:rec?sumG(rec.entries):0,kc:rec?sumK(rec.entries):0};
+    });
+    var max=Math.max(GOAL,Math.max.apply(null,vals.map(function(v){return v.g;})));
+    $("hist").innerHTML=vals.map(function(v){
+      var h=Math.round((v.g/max)*62);
+      var cls="b"+(v.g>=GOAL?" hit":"")+(v.g===0?" none":"")+(v.k===TODAY?" today":"");
+      return '<div class="bar" title="'+v.k+': '+v.g+' g"><div class="'+cls+
+             '" style="height:'+Math.max(2,h)+'px"></div><div class="d">'+v.k.slice(8)+'</div></div>';
+    }).join("");
+
+    var last7=vals.slice(-7).filter(function(v){return v.g>0;});
+    $("avg7").textContent=last7.length?Math.round(last7.reduce(function(a,v){return a+v.g;},0)/last7.length):"—";
+    $("hit14").textContent=vals.filter(function(v){return v.g>=GOAL;}).length;
+    var s=0;
+    for(var j=vals.length-1;j>=0;j--){ if(vals[j].g>=FLOOR) s++; else break; }
+    $("streak").textContent=s;
+    var g7=last7.reduce(function(a,v){return a+v.g;},0), k7=last7.reduce(function(a,v){return a+v.kc;},0);
+    $("eff7").textContent=k7?effOf(g7,k7).toFixed(1):"—";
+    $("avgnote").textContent=last7.length?"logged "+last7.length+" of last 7":"start logging";
+  }
+
+  function render(){ renderToday(); renderHistory(); }
+
+  function add(l,g,k){
+    g=Math.round(+g); k=Math.round(+k)||0;
+    if(!l||!isFinite(g)||g<=0) return;
+    day.entries.push({id:String(Date.now())+Math.round(Math.random()*999),
+                      l:l,g:g,k:k,ts:Date.now()});
+    persist(); render();
+  }
+
+  $("chips").innerHTML=FOODS.map(function(f,i){
+    var e=effOf(f.g,f.k);
+    return '<button class="chip'+(f.bag?" bag":"")+'" data-i="'+i+'">'+
+           '<span>'+esc(f.l)+'</span><span class="cg">'+f.g+' g</span>'+
+           '<span class="ck">'+f.k+' kcal</span>'+
+           '<span class="ce '+bandOf(e)+'">'+e.toFixed(0)+'/100</span></button>';
+  }).join("");
+
+  $("reftable").innerHTML=REF.slice().sort(function(a,b){
+    return effOf(b.g,b.k)-effOf(a.g,a.k);
+  }).map(function(f){
+    var e=effOf(f.g,f.k);
+    return '<tr><td>'+esc(f.l)+'</td><td class="n">'+f.g+' g</td><td class="n">'+f.k+
+           '</td><td class="n eff '+bandOf(e)+'">'+e.toFixed(1)+'</td></tr>';
+  }).join("");
+
+  function summary(){
+    var lines=["PROTEIN — LAST 7 DAYS"], rows=[], d=new Date(), gs=[], ks=[];
+    for(var i=0;i<7;i++){
+      var k=key(d), rec=(k===TODAY)?day:history[k];
+      var g=rec?sumG(rec.entries):0, kc=rec?sumK(rec.entries):0;
+      var mark=g>=GOAL?"HIT":(g>=FLOOR?"floor":(g?"under":"--"));
+      rows.unshift("  "+k+"  "+(g||"-")+" g  "+(kc?kc+" kcal":"")+
+                   "  "+mark+((rec&&rec.flying)?"  [flying]":""));
+      if(g){ gs.push(g); ks.push(kc); }
+      d.setDate(d.getDate()-1);
+    }
+    var avg=gs.length?Math.round(gs.reduce(function(a,b){return a+b;},0)/gs.length):0;
+    var kt=ks.reduce(function(a,b){return a+b;},0), gt=gs.reduce(function(a,b){return a+b;},0);
+    lines=lines.concat(rows);
+    lines.push("");
+    lines.push("Days logged: "+gs.length+" of 7");
+    lines.push("Average: "+avg+" g   (target 180, floor 170)");
+    lines.push("Days at 180: "+gs.filter(function(g){return g>=GOAL;}).length);
+    if(kt) lines.push("Efficiency: "+((gt/kt)*100).toFixed(1)+" g per 100 kcal");
+    var text=lines.join("\n"), out=$("out");
+    out.value=text; out.classList.add("show");
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).catch(function(){ out.focus(); out.select(); });
+    } else { out.focus(); out.select(); }
+  }
+
+  /* ---- diagnostics: visible on the page so a failure is observable ---- */
+  var diag={taps:0,acts:0,err:""};
+  function showDiag(){
+    $("diag").textContent="taps "+diag.taps+" · actions "+diag.acts+
+      (diag.err?(" · ERR "+diag.err):"");
+  }
+
+  /* One action per PHYSICAL tap, not per time window — a browser may deliver
+     pointerup, touchend and a synthesized click for the same finger, and a
+     genuine fast double-tap must still count twice. */
+  var tapHandled=false;
+  function once(fn){
+    if(tapHandled) return;
+    tapHandled=true;
+    diag.acts++;
+    try{ fn(); }catch(e){ diag.err=(e&&e.message)||String(e); }
+    showDiag();
+  }
+
+  function addCustom(){
+    var l=$("clabel").value.trim()||"Custom", g=$("cgrams").value, k=$("ckcal").value;
+    if(!g){ $("cgrams").focus(); return; }
+    add(l,g,k);
+    $("clabel").value=""; $("cgrams").value=""; $("ckcal").value="";
+    if(document.activeElement&&document.activeElement.blur) document.activeElement.blur();
+  }
+
+  function handleTap(target){
+    var c=target.closest("[data-i]");
+    if(c){ var f=FOODS[+c.dataset.i]; once(function(){ add(f.l,f.g,f.k); }); return true; }
+    var x=target.closest("[data-del]");
+    if(x){ once(function(){
+      day.entries=day.entries.filter(function(e){return e.id!==x.dataset.del;});
+      persist(); render(); }); return true; }
+    if(target.closest("#cadd")){ once(addCustom); return true; }
+    if(target.closest("#flying")){ once(function(){
+      day.flying=!day.flying; persist(); render(); }); return true; }
+    if(target.closest("#copy7")){ once(summary); return true; }
+    return false;
+  }
+
+  /* Every plausible tap channel is wired, and `once` collapses whichever
+     combination of them a given browser actually delivers. No form element:
+     the artifact runs in a sandboxed frame where form submission is blocked
+     outright, which is why the previous attempt never fired here. */
+  var px=0,py=0,pt=0,moved=false;
+  function down(ev){
+    var t=(ev.touches&&ev.touches[0])||ev;
+    px=t.clientX; py=t.clientY; pt=Date.now(); moved=false; tapHandled=false;
+    diag.taps++; showDiag();
+  }
+  function up(ev){
+    var t=(ev.changedTouches&&ev.changedTouches[0])||ev;
+    if(moved) return;
+    if(Math.abs(t.clientX-px)>12||Math.abs(t.clientY-py)>12) return;
+    if(Date.now()-pt>900) return;
+    handleTap(ev.target);
+  }
+  function move(ev){
+    var t=(ev.touches&&ev.touches[0])||ev;
+    if(Math.abs(t.clientX-px)>12||Math.abs(t.clientY-py)>12) moved=true;
+  }
+  document.addEventListener("pointerdown",down);
+  document.addEventListener("pointermove",move);
+  document.addEventListener("pointerup",up);
+  document.addEventListener("touchstart",down,{passive:true});
+  document.addEventListener("touchmove",move,{passive:true});
+  document.addEventListener("touchend",up,{passive:true});
+  document.addEventListener("click",function(ev){ handleTap(ev.target); });
+
+  ["clabel","cgrams","ckcal"].forEach(function(id){
+    $(id).addEventListener("keydown",function(e){
+      if(e.key==="Enter"){ e.preventDefault(); tapHandled=false; once(addCustom); }
+    });
+  });
+  showDiag();
+
+  loadLocalHistory();
+  render();
+
+})();
+</script>
+
+</body>
+</html>
