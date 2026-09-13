@@ -1,1238 +1,588 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Rebuild">
-<meta name="theme-color" content="#0E141A">
+<title>Protein Count</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<title>The Rebuild — session builder</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Protein">
+<meta name="theme-color" content="#1c2027">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0E141A; --panel:#18212A; --panel2:#131C24; --line:#2A3742;
-    --amber:#E8A33D; --go:#4FB477; --nogo:#C4553D; --tx:#E4EBF1; --mut:#8798A6;
-    --sys:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --ink:#12151a;
+    --gun-1:#1c2027;
+    --gun-2:#232930;
+    --gun-3:#2c3340;
+    --line:#3a4250;
+    --paper:#eee9df;
+    --paper-dim:#b9b2a2;
+    --amber:#e3a73c;
+    --amber-dim:#a97a24;
+    --green:#5a9d6f;
+    --red:#c15b4a;
+    --bg:var(--ink);
+    --surf:var(--gun-1);
+    --surf2:var(--gun-2);
+    --border:var(--line);
+    --text:var(--paper);
+    --text-dim:var(--paper-dim);
   }
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html{-webkit-text-size-adjust:100%}
-  body{margin:0;padding:0 0 200px;background:var(--bg);color:var(--tx);
-    font-family:var(--sys);font-size:15px;line-height:1.45}
-  .wrap{max-width:640px;margin:0 auto;padding:0 14px}
-  .hide{display:none!important}
+  [data-theme="light"]{
+    --bg:#eee9df;
+    --surf:#e2dccc;
+    --surf2:#d7cfba;
+    --border:#c2b9a3;
+    --text:#1c2027;
+    --text-dim:#5a5548;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Barlow Semi Condensed',system-ui,sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:48px;
+  }
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .wrap{max-width:640px;margin:0 auto;padding:18px 16px 8px;}
 
-  /* nav
-     v6 FIX: the app runs standalone with viewport-fit=cover and a translucent
-     status bar, so the document starts at y=0 — physically underneath the
-     clock, battery and wifi icons. This bar had a flat 10px of top padding and
-     was therefore drawn completely under the status bar and could not be
-     tapped, which locked the user into whichever session was already open with
-     no route back to Paste or Saved. The dock at the bottom always respected
-     env(safe-area-inset-bottom); the top inset was simply never handled.
-     Left and right insets are handled too, for landscape on a notched phone. */
-  .nav{position:sticky;top:0;z-index:40;background:rgba(14,20,26,.97);
-    border-bottom:1px solid var(--line);margin-bottom:14px;
-    padding:calc(10px + env(safe-area-inset-top)) 0 10px}
-  .navin{max-width:640px;margin:0 auto;display:flex;gap:8px;align-items:center;
-    padding:0 calc(14px + env(safe-area-inset-right)) 0 calc(14px + env(safe-area-inset-left))}
-  .brand{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
-    color:var(--amber);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .navbtn{background:var(--panel);border:1px solid var(--line);color:var(--tx);
-    font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;
-    padding:9px 11px;cursor:pointer}
-  .navbtn.on{border-color:var(--amber);color:var(--amber)}
+  header.top{display:flex;align-items:baseline;justify-content:space-between;padding:4px 2px 14px;border-bottom:2px solid var(--amber);}
+  header.top h1{font-size:28px;font-weight:700;letter-spacing:.5px;margin:0;}
+  header.top .tag{font-size:12px;color:var(--text-dim);margin-top:2px;}
+  .themebtn{background:none;border:1px solid var(--border);color:var(--text-dim);border-radius:4px;padding:5px 10px;font-family:'IBM Plex Mono',monospace;font-size:12px;cursor:pointer;}
+  .themebtn:hover{border-color:var(--amber);color:var(--amber);}
 
-  header{border-bottom:1px solid var(--line);padding:6px 0 14px;margin-bottom:14px}
-  h1{font-size:30px;line-height:1.02;font-weight:800;letter-spacing:-.01em;text-transform:uppercase;margin:0}
-  .sub{font-size:14px;color:var(--mut);margin-top:8px}
-  .metaline{font-family:var(--mono);font-size:11px;color:var(--mut);letter-spacing:.04em;margin-top:8px}
-  .metaline.dirty{color:var(--amber)}
+  .datebar{display:flex;align-items:center;gap:8px;margin:16px 0 10px;}
+  .datebar button.nav{background:var(--surf);border:1px solid var(--border);color:var(--text);width:34px;height:34px;border-radius:6px;font-size:16px;cursor:pointer;}
+  .datebar button.nav:disabled{opacity:.3;cursor:default;}
+  .dateinfo{flex:1;text-align:center;}
+  .dateinfo .lbl{font-size:20px;font-weight:600;}
+  .dateinfo .rel{font-size:12px;color:var(--text-dim);}
+  .datebar input[type="date"]{
+    background:var(--surf);border:1px solid var(--border);color:var(--text);
+    border-radius:6px;padding:6px 8px;font-family:'IBM Plex Mono',monospace;font-size:12px;
+  }
+  .todaybtn{background:none;border:1px solid var(--amber-dim);color:var(--amber);border-radius:6px;padding:5px 9px;font-family:'IBM Plex Mono',monospace;font-size:11px;cursor:pointer;white-space:nowrap;}
 
-  /* paste screen */
-  .paste{background:var(--panel);border:1px solid var(--line);padding:15px;margin-bottom:12px}
-  .paste h2,.gate h2,.block h2{font-size:17px;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin:0 0 4px}
-  .paste p,.gate p,.block p{margin:0 0 12px;font-size:13px;color:var(--mut)}
-  textarea{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--tx);
-    font-family:var(--mono);font-size:16px;padding:11px;border-radius:0;resize:vertical;line-height:1.5}
-  textarea:focus,input:focus{outline:none;border-color:var(--amber)}
-  .fmt{font-family:var(--mono);font-size:12px;color:var(--mut);background:var(--panel2);
-    border:1px dashed var(--line);padding:11px;margin-top:12px;white-space:pre-wrap;line-height:1.6}
-  .fmt b{color:var(--tx);font-weight:600}
-  .err{color:var(--nogo);font-size:13px;margin-top:10px}
+  .card{background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px;}
+  .card h2{font-size:15px;text-transform:none;font-weight:600;margin:0 0 10px;color:var(--text-dim);}
 
-  /* gate */
-  .gate{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--amber);padding:15px;margin-bottom:16px}
-  .chips{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
-  .chip{font-family:var(--mono);font-size:16px;font-weight:600;padding:13px 0;text-align:center;
-    background:var(--panel2);border:1px solid var(--line);color:var(--tx);cursor:pointer}
-  .chip.on{background:var(--amber);border-color:var(--amber);color:#12181E}
-  .chip.on.low{background:var(--nogo);border-color:var(--nogo);color:#fff}
-  .verdict{font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
-    margin-top:13px;padding:10px 12px;border:1px solid var(--line);display:none}
-  .verdict.go{display:block;color:var(--go);border-color:rgba(79,180,119,.45);background:rgba(79,180,119,.08)}
-  .verdict.stop{display:block;color:var(--nogo);border-color:rgba(196,85,61,.5);background:rgba(196,85,61,.1)}
-  .verdict span{display:block;font-size:13px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--mut);margin-top:5px}
+  .bigrow{display:flex;align-items:flex-end;gap:14px;}
+  .biggrams{font-size:52px;font-weight:600;line-height:1;}
+  .biggrams small{font-size:20px;font-weight:400;color:var(--text-dim);}
+  .sidefig{font-size:13px;color:var(--text-dim);}
+  .sidefig b{color:var(--text);font-family:'IBM Plex Mono',monospace;}
 
-  .seclabel{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
-    color:var(--mut);border-bottom:1px solid var(--line);padding-bottom:6px;margin:24px 0 12px;
-    display:flex;gap:10px;align-items:baseline}
-  .seclabel .cnt{margin-left:auto;color:var(--amber);letter-spacing:.06em}
+  .bar-outer{position:relative;height:22px;background:var(--surf2);border-radius:11px;margin-top:12px;overflow:hidden;border:1px solid var(--border);}
+  .bar-fill{position:absolute;left:0;top:0;bottom:0;background:var(--amber);border-radius:11px 0 0 11px;transition:width .25s;}
+  .bar-fill.hit{background:var(--green);}
+  .bar-floor{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--red);}
+  .bar-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--text-dim);margin-top:4px;font-family:'IBM Plex Mono',monospace;}
 
-  /* WARM-UP — tickable rows */
-  .warmrow{display:flex;gap:11px;align-items:center;background:var(--panel2);
-    border:1px solid var(--line);border-left:3px solid rgba(232,163,61,.45);
-    padding:12px 13px;margin-bottom:7px;cursor:pointer}
-  .warmrow .wtxt{flex:1;min-width:0;font-size:14.5px;line-height:1.35}
-  .warmrow.on{border-left-color:var(--go);background:rgba(79,180,119,.07)}
-  .warmrow.on .wtxt{color:var(--mut)}
-  .wtick{background:var(--panel);border:1px solid var(--line);color:var(--mut);
-    font-size:18px;font-family:var(--mono);min-width:46px;height:42px;flex:0 0 auto;
-    display:flex;align-items:center;justify-content:center;cursor:pointer}
-  .wtick.on{background:var(--go);border-color:var(--go);color:#0E141A;font-weight:700}
+  .effbadge{display:inline-block;padding:3px 8px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:12px;margin-top:10px;}
+  .eff-cheap{background:rgba(90,157,111,.18);color:var(--green);}
+  .eff-mod{background:rgba(227,167,60,.18);color:var(--amber);}
+  .eff-exp{background:rgba(193,91,74,.18);color:var(--red);}
+  .noeff{color:var(--text-dim);font-size:12px;margin-top:10px;}
 
-  /* items */
-  .item{background:var(--panel);border:1px solid var(--line);margin-bottom:10px}
-  .item.locked{opacity:.4}
-  .item.done{border-left:3px solid var(--go)}
-  .item.skipped{opacity:.4}
-  .item.skipped h3{text-decoration:line-through}
-  .ihead{display:flex;gap:11px;align-items:flex-start;padding:13px;cursor:pointer}
-  .num{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--amber);
-    border:1px solid var(--line);min-width:27px;height:27px;display:flex;align-items:center;
-    justify-content:center;flex:0 0 auto;margin-top:2px}
-  .item.done .num{color:var(--go);border-color:rgba(79,180,119,.5)}
-  .iname{flex:1;min-width:0}
-  .iname h3{font-size:19px;font-weight:700;text-transform:uppercase;margin:0;line-height:1.15}
-  .scheme{font-family:var(--mono);font-size:11.5px;color:var(--mut);margin-top:4px;letter-spacing:.04em}
-  .scheme .rst{color:var(--amber)}
-  .target{font-size:12.5px;color:var(--amber);margin-top:6px;line-height:1.4}
-  .lockflag{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--nogo);text-transform:uppercase;margin-top:6px;display:none}
-  .item.locked .lockflag{display:block}
-  .partflag{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--amber);
-    text-transform:uppercase;margin-top:6px;display:none}
-  .item.partial .partflag{display:block}
-  .chev{color:var(--mut);font-size:13px;margin-top:4px}
-  .item.open .chev{transform:rotate(180deg)}
-  .sets{padding:0 13px 13px;display:none}
-  .item.open .sets{display:block}
-  .setrow{display:grid;grid-template-columns:32px 1fr 1fr 50px;gap:7px;align-items:center;margin-top:8px}
-  .slab{font-family:var(--mono);font-size:11px;color:var(--mut);letter-spacing:.06em}
-  .setrow input,.inote{background:var(--panel2);border:1px solid var(--line);color:var(--tx);
-    font-family:var(--mono);font-size:16px;padding:11px 9px;border-radius:0;width:100%}
-  .inote{font-family:var(--sys);margin-top:10px;resize:vertical}
-  .setrow input::placeholder,.inote::placeholder,textarea::placeholder{color:#4E5D69}
-  .tick{background:var(--panel2);border:1px solid var(--line);color:var(--mut);
-    font-size:18px;padding:10px 0;cursor:pointer;font-family:var(--mono)}
-  .tick.on{background:var(--go);border-color:var(--go);color:#0E141A;font-weight:700}
-  .rowtools{display:flex;gap:8px;margin-top:11px}
-  .minibtn{flex:1;background:transparent;border:1px solid var(--line);color:var(--mut);
-    font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:10px 0;cursor:pointer}
+  .flyrow{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:13px;color:var(--text-dim);}
+  .flyrow input{width:16px;height:16px;accent-color:var(--amber);}
 
-  .block{background:var(--panel);border:1px solid var(--line);padding:15px;margin-bottom:10px}
-  .toggle{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--tx);
-    text-transform:uppercase;letter-spacing:.07em;font-size:15px;font-weight:700;padding:14px;cursor:pointer}
-  .toggle.on{background:var(--go);border-color:var(--go);color:#0E141A}
-  .bigbtn{width:100%;background:var(--amber);border:none;color:#12181E;text-transform:uppercase;
-    letter-spacing:.08em;font-size:17px;font-weight:800;padding:16px;cursor:pointer;margin-top:10px}
-  .ghostbtn{width:100%;background:transparent;border:1px solid var(--line);color:var(--mut);
-    text-transform:uppercase;letter-spacing:.08em;font-size:13px;padding:13px;cursor:pointer;margin-top:8px}
-  .out{width:100%;min-height:170px;font-size:12px;margin-top:10px;display:none}
-  .out.show{display:block}
-  .warnbar{display:none;background:rgba(232,163,61,.1);border:1px solid rgba(232,163,61,.5);
-    color:var(--amber);font-size:13px;padding:11px 12px;margin-top:10px;line-height:1.4}
-  .warnbar.show{display:block}
+  .feed4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+  .feedbox{background:var(--surf2);border:1px solid var(--border);border-radius:8px;padding:8px 4px;text-align:center;}
+  .feedbox.hit{border-color:var(--green);background:rgba(90,157,111,.14);}
+  .feedbox .fname{font-size:11px;color:var(--text-dim);}
+  .feedbox .fgram{font-family:'IBM Plex Mono',monospace;font-size:17px;margin-top:2px;}
 
-  /* saved list */
-  .srow{display:flex;gap:10px;align-items:center;background:var(--panel);
-    border:1px solid var(--line);padding:13px;margin-bottom:8px}
-  .srow .st{flex:1;min-width:0}
-  .srow h4{margin:0;font-size:16px;font-weight:700;text-transform:uppercase}
-  .srow .sd{font-family:var(--mono);font-size:11px;color:var(--mut);margin-top:3px}
-  .srow.cur{border-left:3px solid var(--amber)}
+  .chiprow{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{
+    background:var(--surf2);border:1px solid var(--border);border-radius:8px;
+    padding:7px 10px;cursor:pointer;font-size:13px;text-align:left;
+    display:flex;flex-direction:column;gap:1px;min-width:84px;
+    border-left:3px solid var(--border);
+  }
+  .chip.bag{border-left:3px solid var(--amber);}
+  .chip:hover{border-color:var(--amber);}
+  .chip .cn{font-weight:600;}
+  .chip .cd{font-size:11px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;}
 
-  .dock{position:fixed;left:0;right:0;bottom:0;background:rgba(14,20,26,.96);
-    border-top:1px solid var(--line);padding:9px 14px calc(9px + env(safe-area-inset-bottom));z-index:50}
-  .dockin{max-width:640px;margin:0 auto;display:flex;gap:9px;align-items:center}
-  .clock{font-family:var(--mono);font-size:28px;font-weight:600;color:var(--amber);min-width:78px}
-  .clock.rest{color:var(--go)}
-  .dockbtns{display:flex;gap:6px;flex:1}
-  .dockbtn{flex:1;background:var(--panel);border:1px solid var(--line);color:var(--tx);
-    font-family:var(--mono);font-size:12px;padding:12px 0;cursor:pointer}
-  .dockbtn.prime{border-color:var(--amber);color:var(--amber)}
-  .prog{font-family:var(--mono);font-size:11px;color:var(--mut);text-align:right;min-width:52px}
-  .restwho{max-width:640px;margin:5px auto 0;font-family:var(--mono);font-size:10.5px;
-    letter-spacing:.06em;color:var(--mut);text-transform:uppercase;min-height:13px}
-  footer{font-size:12px;color:var(--mut);text-align:center;padding:20px 0 4px;line-height:1.6}
-  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  .customform{display:grid;grid-template-columns:1fr 70px 80px 90px auto;gap:6px;margin-top:12px;align-items:center;}
+  .customform input,.customform select{
+    background:var(--surf2);border:1px solid var(--border);color:var(--text);
+    border-radius:6px;padding:7px 8px;font-size:13px;font-family:'Barlow Semi Condensed',sans-serif;width:100%;
+  }
+  .customform button{
+    background:var(--amber);border:none;color:var(--ink);font-weight:600;
+    border-radius:6px;padding:8px 10px;cursor:pointer;font-size:13px;
+  }
+  @media (max-width:480px){
+    .customform{grid-template-columns:1fr 1fr;}
+    .customform button{grid-column:1/-1;}
+  }
+
+  .entrylist{margin-top:12px;display:flex;flex-direction:column;gap:6px;}
+  .entryrow{display:flex;align-items:center;justify-content:space-between;background:var(--surf2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:13px;}
+  .entryrow .el{color:var(--text-dim);font-family:'IBM Plex Mono',monospace;font-size:11px;margin-left:8px;}
+  .entryrow .edel{background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;padding:0 4px;}
+  .empty{color:var(--text-dim);font-size:12px;font-style:italic;padding:6px 2px;}
+
+  .histrow{display:flex;align-items:flex-end;gap:5px;height:90px;margin-top:8px;}
+  .histbar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;cursor:pointer;}
+  .histbar .stick{width:100%;max-width:22px;background:var(--surf2);border:1px solid var(--border);border-radius:3px 3px 0 0;position:relative;min-height:2px;}
+  .histbar .stick.hit{background:var(--green);border-color:var(--green);}
+  .histbar .stick.under{background:var(--amber-dim);border-color:var(--amber-dim);}
+  .histbar .stick.none{background:transparent;border-style:dashed;}
+  .histbar .stick.sel{outline:2px solid var(--amber);}
+  .histbar .dlbl{font-size:9px;color:var(--text-dim);margin-top:4px;font-family:'IBM Plex Mono',monospace;}
+
+  .statgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .statbox{background:var(--surf2);border:1px solid var(--border);border-radius:8px;padding:10px;}
+  .statbox .sl{font-size:11px;color:var(--text-dim);}
+  .statbox .sv{font-family:'IBM Plex Mono',monospace;font-size:20px;margin-top:2px;}
+
+  table.reftable{width:100%;border-collapse:collapse;font-size:12px;}
+  table.reftable th{text-align:left;color:var(--text-dim);font-weight:600;padding:4px 6px;border-bottom:1px solid var(--border);font-size:11px;}
+  table.reftable td{padding:5px 6px;border-bottom:1px solid var(--border);}
+  table.reftable td.num{font-family:'IBM Plex Mono',monospace;text-align:right;}
+  .refband{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;}
+  .rb-cheap{background:var(--green);} .rb-mod{background:var(--amber);} .rb-exp{background:var(--red);}
+  details.refdetails summary{cursor:pointer;color:var(--amber);font-size:13px;font-weight:600;}
+
+  footer.note{font-size:11px;color:var(--text-dim);text-align:center;line-height:1.5;margin-top:18px;padding:0 8px;}
+  footer.note .warn{color:var(--amber);font-weight:600;}
 </style>
 </head>
-<body>
-
-<div class="nav">
-  <div class="navin">
-    <div class="brand" id="brand">The Rebuild</div>
-    <button type="button" class="navbtn" id="navNew">Paste</button>
-    <button type="button" class="navbtn" id="navSaved">Saved</button>
-  </div>
-</div>
-
+<body data-theme="dark">
 <div class="wrap">
 
-  <!-- ============ PASTE ============ -->
-  <section id="viewPaste">
-    <header>
-      <h1>Paste today's sheet</h1>
-      <div class="sub">Drop the movement table in. It builds the session, saves it on this phone, and you log straight into it.</div>
-    </header>
-
-    <div class="paste">
-      <h2>Sheet text</h2>
-      <p>Copy the movement table out of the sheet, or type it. Table rows, tabs, or plain lines all work.</p>
-      <textarea id="pasteBox" rows="12" placeholder="TITLE: Push A — Day 2&#10;DATE: Aug 31 2026&#10;GATE: below 7 locks out items 1-4&#10;&#10;1 | Barbell bench (Tonal) | 3 x 8 | Target 52 | 150 s&#10;2 | Incline press | 3 x 10 | Target 42 | 120 s"></textarea>
-      <div class="err hide" id="pasteErr"></div>
-      <button type="button" class="bigbtn" id="buildBtn">Build session</button>
-      <button type="button" class="ghostbtn" id="exampleBtn">Load Monday's Push A</button>
-
-      <div class="fmt"><b>What it reads</b>
-TITLE: / DATE: / GATE: / WARM-UP: / CONDITIONING: / REST:  — optional headers
-Then one movement per line:
-  <b>number · name · sets x reps · target · rest</b>
-Separate with |  or a tab  or two spaces.
-GATE: below 7 locks out items 1-4   ← sets the shoulder rule
-REST: 90 s                          ← default when a row has none
-Sets come from the "3 x 8" — write 4 x 10 and you get four rows.
-
-<b>Rest column</b> takes 150 s · 90s · 2:30 · 2 min.
-Enter a rep count and that rest starts on its own.
-
-<b>Warm-up</b> lines are tickable. Split them with  /  or one
-WARM-UP: line each.</div>
+  <header class="top">
+    <div>
+      <h1>Protein Count</h1>
+      <div class="tag">target 180 g &middot; floor 170 g</div>
     </div>
-  </section>
+    <button class="themebtn" id="themeBtn">LIGHT</button>
+  </header>
 
-  <!-- ============ SAVED ============ -->
-  <section id="viewSaved" class="hide">
-    <header>
-      <h1>Saved sessions</h1>
-      <div class="sub">Everything you've built on this phone. Open one to keep logging it.</div>
-    </header>
-    <div id="savedList"></div>
-  </section>
-
-  <!-- ============ TRACK ============ -->
-  <section id="viewTrack" class="hide">
-    <header>
-      <h1 id="tTitle">Session</h1>
-      <div class="sub" id="tDate"></div>
-      <div class="metaline" id="savedline">Saves as you go.</div>
-    </header>
-
-    <section class="gate" id="gateBox">
-      <h2>Shoulder — rate before item 1</h2>
-      <p id="gateSub">Right shoulder, 1 to 10. Baseline is 8 pre / 7 post.</p>
-      <div class="chips" id="preChips"></div>
-      <div class="verdict" id="verdict"></div>
-    </section>
-
-    <div id="warmWrap" class="hide">
-      <div class="seclabel">Warm-up <span class="cnt" id="warmCnt"></span></div>
-      <div id="warmList"></div>
+  <div class="datebar">
+    <button class="nav" id="prevDay">&#8249;</button>
+    <div class="dateinfo">
+      <div class="lbl mono" id="dateLbl">—</div>
+      <div class="rel" id="dateRel">—</div>
     </div>
-
-    <div class="seclabel" id="listLabel">Session</div>
-    <div id="list"></div>
-
-    <div class="seclabel">Close out</div>
-
-    <div class="block" id="condBox">
-      <h2>Conditioning</h2>
-      <p id="condText"></p>
-      <button type="button" class="toggle" id="condBtn">Mark conditioning done</button>
-    </div>
-
-    <div class="block">
-      <h2>Shoulder — rate after</h2>
-      <p>Log this even if it felt fine. Two readings at 5 or below and pressing comes out for a week.</p>
-      <div class="chips" id="postChips"></div>
-    </div>
-
-    <div class="block">
-      <h2>Notes</h2>
-      <p>Protein total, sleep, anything that explains a number.</p>
-      <textarea class="inote" id="notes" rows="3" placeholder="Protein g, how the shoulder behaved, substitutions…"></textarea>
-    </div>
-
-    <button type="button" class="bigbtn" id="copyBtn">Copy summary to paste back</button>
-    <div class="warnbar" id="warnbar"></div>
-    <textarea class="inote out" id="out" readonly></textarea>
-    <button type="button" class="ghostbtn" id="delBtn">Delete this session</button>
-
-    <footer>Targets are floors. Beat one and add a set — the next sheet gets written off what you actually lifted.</footer>
-  </section>
-</div>
-
-<div class="dock" id="dock">
-  <div class="dockin">
-    <div class="clock" id="clock">0:00</div>
-    <div class="dockbtns">
-      <button type="button" class="dockbtn prime" id="tpre">Rest</button>
-      <button type="button" class="dockbtn" id="t30">+30</button>
-      <button type="button" class="dockbtn" id="tstop">Stop</button>
-    </div>
-    <div class="prog" id="prog">0/0</div>
+    <button class="nav" id="nextDay">&#8250;</button>
+    <input type="date" id="datePick">
+    <button class="todaybtn" id="todayBtn">TODAY</button>
   </div>
-  <div class="restwho" id="restwho"></div>
+
+  <div class="card">
+    <h2>Today's total</h2>
+    <div class="bigrow">
+      <div class="biggrams mono"><span id="totG">0</span><small> g</small></div>
+      <div class="sidefig"><b id="totK">0</b> kcal logged</div>
+    </div>
+    <div class="bar-outer">
+      <div class="bar-fill" id="barFill" style="width:0%"></div>
+      <div class="bar-floor" id="barFloor"></div>
+    </div>
+    <div class="bar-labels"><span>0</span><span>floor 170</span><span>target 180</span></div>
+    <div id="effWrap"></div>
+    <label class="flyrow"><input type="checkbox" id="flyCheck"> Flying day</label>
+  </div>
+
+  <div class="card">
+    <h2>Four feedings</h2>
+    <div class="feed4" id="feed4"></div>
+  </div>
+
+  <div class="card">
+    <h2>Quick add</h2>
+    <div class="chiprow" id="chipRow"></div>
+    <div class="customform">
+      <input type="text" id="cLabel" placeholder="Custom label">
+      <input type="number" id="cGrams" placeholder="g" min="0">
+      <input type="number" id="cKcal" placeholder="kcal" min="0">
+      <select id="cWhen">
+        <option value="morning">Morning</option>
+        <option value="midday">Midday</option>
+        <option value="evening">Evening</option>
+        <option value="night">Night</option>
+      </select>
+      <button id="cAdd">Add</button>
+    </div>
+    <div class="entrylist" id="entryList"></div>
+  </div>
+
+  <div class="card">
+    <h2>14-day history</h2>
+    <div class="histrow" id="histRow"></div>
+  </div>
+
+  <div class="card">
+    <h2>7-day summary</h2>
+    <div class="statgrid" id="statGrid"></div>
+  </div>
+
+  <div class="card">
+    <details class="refdetails">
+      <summary>Reference — g per 100 kcal, ranked</summary>
+      <table class="reftable" id="refTable" style="margin-top:10px;">
+        <thead><tr><th>Food</th><th style="text-align:right;">g</th><th style="text-align:right;">kcal</th><th style="text-align:right;">g/100kcal</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </details>
+  </div>
+
+  <footer class="note">
+    <span class="warn">Not a calorie budget.</span> The calorie readout shows source efficiency, not a target — the scale's 7-day average is what verifies the deficit.<br>
+    <span id="asOf"></span>
+  </footer>
+
 </div>
 
 <script>
 (function(){
 'use strict';
 
-/* ============================ PARSER ============================ */
-/* PARSER-START */
-function trim(s){ return String(s).trim(); }
+/* ============================ CONSTANTS ============================ */
+var TARGET = 180, FLOOR = 170;
 
-function splitCells(raw){
-  var s = raw;
-  if (s.charAt(0) === '|') s = s.replace(/^\|/, '').replace(/\|\s*$/, '');
-  if (s.indexOf('|') >= 0) return s.split('|').map(trim).filter(function(x){ return x !== ''; });
-  if (s.indexOf('\t') >= 0) return s.split('\t').map(trim).filter(Boolean);
-  if (/\s{2,}/.test(s)) return s.split(/\s{2,}/).map(trim).filter(Boolean);
-  if (/\s[—–]\s/.test(s)) return s.split(/\s[—–]\s/).map(trim).filter(Boolean);
-  return [s];
-}
+var QUICK_FOODS = [
+  {l:'Whey shake', g:42, k:280, bag:false},
+  {l:'Protein bar', g:20, k:190, bag:true},
+  {l:'Meat stick', g:10, k:80, bag:true},
+  {l:'Tuna pouch', g:28, k:130, bag:true},
+  {l:'Whey packet', g:20, k:130, bag:true},
+  {l:'Chicken breast (6oz)', g:31, k:165, bag:false},
+  {l:'Greek yogurt cup', g:17, k:100, bag:false},
+  {l:'Cottage cheese cup', g:24, k:180, bag:false},
+  {l:'2 eggs + whites', g:19, k:170, bag:false},
+];
 
-function isScheme(s){ return /^\d+\s*[x×]\s*\S/i.test(trim(s)); }
+var REF_FOODS = [
+  {l:'Egg whites (4)', g:14, k:66},
+  {l:'Tuna pouch', g:28, k:130},
+  {l:'Chicken breast (6oz)', g:31, k:165},
+  {l:'Turkey breast (deli, 4oz)', g:22, k:120},
+  {l:'Greek yogurt (nonfat cup)', g:17, k:100},
+  {l:'Whey shake (2 scoop + almond milk)', g:42, k:280},
+  {l:'Cottage cheese (low-fat cup)', g:24, k:180},
+  {l:'Lean ground beef 93/7 (4oz)', g:22, k:170},
+  {l:'Meat stick', g:10, k:80},
+  {l:'Salmon (4oz)', g:25, k:210},
+  {l:'Protein bar', g:20, k:190},
+  {l:'Milk, 2% (8oz)', g:8, k:122},
+  {l:'Cheddar cheese (1oz)', g:7, k:113},
+  {l:'Almonds (1oz)', g:6, k:164},
+  {l:'Peanut butter (2 tbsp)', g:7, k:190},
+];
 
-function setCount(scheme){
-  var m = String(scheme).match(/^\s*(\d+)\s*[x×]/i);
-  var n = m ? parseInt(m[1], 10) : 3;
-  if (!(n > 0)) n = 3;
-  return Math.min(n, 8);
-}
+var FEEDS = [
+  {k:'morning', l:'Morning'},
+  {k:'midday', l:'Midday'},
+  {k:'evening', l:'Evening'},
+  {k:'night', l:'Night'}
+];
 
-/* Rest parsing. Accepts 150 s · 150sec · 2:30 · 2 min · 1.5 min.
-   A bare number is NOT accepted here — too easy to eat a target. */
-function parseDur(s){
-  var t = trim(s).toLowerCase();
-  if (!t) return 0;
-  var mc = t.match(/^(\d{1,2}):([0-5]\d)$/);
-  if (mc) return parseInt(mc[1], 10) * 60 + parseInt(mc[2], 10);
-  var mm = t.match(/^(\d+(?:\.\d+)?)\s*(?:m|min|mins|minute|minutes)$/);
-  if (mm) return Math.round(parseFloat(mm[1]) * 60);
-  var ms = t.match(/^(\d{1,4})\s*(?:s|sec|secs|second|seconds)$/);
-  if (ms) return parseInt(ms[1], 10);
-  return 0;
-}
-
-/* Pull "rest 90s" / "rest: 2:30" out of free text. Returns {sec, text}. */
-function extractRest(txt){
-  var s = String(txt || '');
-  var m = s.match(/\brest\s*[:=-]?\s*(\d{1,2}:[0-5]\d|\d+(?:\.\d+)?\s*(?:s|sec|secs|second|seconds|m|min|mins|minute|minutes)\b)/i);
-  if (!m) return { sec: 0, text: s };
-  var sec = parseDur(m[1]);
-  if (!sec) return { sec: 0, text: s };
-  return { sec: sec, text: trim(s.replace(m[0], ' ').replace(/\s{2,}/g, ' ').replace(/^[—–\-,;.\s]+|[—–\-,;.\s]+$/g, '')) };
-}
-
-/* Fallback when the sheet says nothing: heavier rep ranges rest longer. */
-function defaultRest(scheme){
-  var m = String(scheme).match(/[x×]\s*(\d+)/i);
-  var reps = m ? parseInt(m[1], 10) : 10;
-  if (reps <= 6) return 150;
-  if (reps <= 8) return 120;
-  if (reps <= 12) return 90;
-  return 60;
-}
-
-function applyGate(out, txt){
-  var s = String(txt);
-  var th = s.match(/(?:below|under|less than|<)\s*(\d+)/i);
-  if (th) { out.gateThreshold = parseInt(th[1], 10); s = s.replace(th[0], ' '); }
-  var nums = [];
-  var rangeRe = /(\d+)\s*[-–—]\s*(\d+)/g, m;
-  while ((m = rangeRe.exec(s))){
-    var a = parseInt(m[1], 10), b = parseInt(m[2], 10);
-    for (var i = a; i <= b && i - a < 40; i++) nums.push(i);
-    s = s.replace(m[0], ' '); rangeRe.lastIndex = 0;
-  }
-  var single = s.match(/\d+/g);
-  if (single) single.forEach(function(n){ nums.push(parseInt(n, 10)); });
-  nums.forEach(function(n){ if (out.gateItems.indexOf(n) < 0) out.gateItems.push(n); });
-}
-
-/* One WARM-UP: line can carry several moves. Split on "  /  ", " | ", or newline. */
-function splitWarm(v){
-  return String(v)
-    .split(/\s{2,}\/\s{2,}|\s+\|\s+|\r?\n/)
-    .map(function(x){ return trim(x).replace(/^[-•*•]\s*/, ''); })
-    .filter(function(x){ return x.length > 0; });
-}
-
-function toItem(cells, raw){
-  var n = null, rest = cells.slice();
-
-  var lead = rest[0] && rest[0].match(/^(\d{1,2})[.):]?$/);
-  if (lead){ n = parseInt(lead[1], 10); rest = rest.slice(1); }
-  else if (rest[0]){
-    var inline = rest[0].match(/^(\d{1,2})[.)]\s+(.+)$/);
-    if (inline){ n = parseInt(inline[1], 10); rest = rest.slice(); rest[0] = inline[2]; }
-  }
-  if (!rest.length) return null;
-
-  var si = -1;
-  for (var i = 0; i < rest.length; i++){ if (isScheme(rest[i])){ si = i; break; } }
-
-  /* A trailing cell that is purely a duration is the REST column. Only ever
-     taken from AFTER the scheme, so a bare target can never be eaten. */
-  var restSec = 0;
-  if (si >= 0 && rest.length > si + 1){
-    var lastIdx = rest.length - 1;
-    var d = parseDur(rest[lastIdx]);
-    if (d > 0){ restSec = d; rest = rest.slice(0, lastIdx); }
-  }
-
-  var name, scheme, target;
-  if (si >= 0){
-    name = rest.slice(0, si).join(' ').trim();
-    scheme = rest[si].trim();
-    target = rest.slice(si + 1).join(' — ').trim();
-    if (!name){ name = target; target = ''; }
-  } else if (cells.length === 1){
-    var re = /^(?:(\d{1,2})[.)]?\s+)?(.+?)\s+(\d+\s*[x×]\s*[^\s]+(?:\s+each)?)\s*(.*)$/i;
-    var m2 = raw.match(re);
-    if (m2){
-      if (m2[1]) n = parseInt(m2[1], 10);
-      name = trim(m2[2]); scheme = trim(m2[3]); target = trim(m2[4]);
-    } else {
-      if (n === null) return null;
-      name = rest.join(' ').trim(); scheme = '3 x 10'; target = '';
-    }
-  } else {
-    if (n === null) return null;
-    name = rest[0]; scheme = '3 x 10'; target = rest.slice(1).join(' — ');
-  }
-
-  if (!name) return null;
-
-  /* Secondary source: "rest 90s" written inside the target note. */
-  if (!restSec){
-    var er = extractRest(target);
-    if (er.sec){ restSec = er.sec; target = er.text; }
-  }
-
-  var gated = /\[gate\]|\(gate\)/i.test(name + ' ' + target);
-  name = name.replace(/\[gate\]|\(gate\)/ig, '').trim();
-  target = target.replace(/\[gate\]|\(gate\)/ig, '').trim();
-
-  return { n: n, name: name, scheme: scheme, sets: setCount(scheme),
-           target: target, gated: gated, rest: restSec };
-}
-
-function parseSheet(text){
-  var out = { title:'', date:'', gateThreshold:7, gateItems:[], warmup:[],
-              conditioning:'', restDefault:0, items:[] };
-  var lines = String(text).split(/\r?\n/);
-  var autoN = 0;
-
-  for (var li = 0; li < lines.length; li++){
-    var raw = trim(lines[li]);
-    if (!raw) continue;
-    if (/^[-=_*\s|:+]+$/.test(raw)) continue;
-    raw = raw.replace(/^#+\s*/, '').replace(/\*\*/g, '');
-    if (!raw) continue;
-
-    var kv = raw.match(/^([A-Za-z][A-Za-z \-]{1,20}?)\s*:\s*(.+)$/);
-    if (kv){
-      var k = kv[1].toLowerCase().replace(/[\s\-]/g, ''), v = trim(kv[2]);
-      if (k === 'title' || k === 'session'){ out.title = v; continue; }
-      if (k === 'date'){ out.date = v; continue; }
-      if (k === 'gate' || k === 'shouldergate'){ applyGate(out, v); continue; }
-      if (k === 'warmup'){ out.warmup = out.warmup.concat(splitWarm(v)); continue; }
-      if (k === 'conditioning' || k === 'cardio'){ out.conditioning = v; continue; }
-      if (k === 'rest' || k === 'restdefault'){ out.restDefault = parseDur(v) || 0; continue; }
-      if (k === 'note' || k === 'notes'){ out.warmup = out.warmup.concat(splitWarm(v)); continue; }
-    }
-
-    var cells = splitCells(raw);
-
-    if (/lock(s|ed)?\s*out/i.test(raw) && /\d/.test(raw)){ applyGate(out, raw); continue; }
-
-    if (cells.length > 2 && /^(#|no\.?|item|movement|exercise)$/i.test(cells[0])) continue;
-
-    var it = toItem(cells, raw);
-    if (it){
-      if (it.n === null) it.n = autoN + 1;
-      autoN = it.n;
-      out.items.push(it);
-      continue;
-    }
-
-    if (!out.title){ out.title = raw; continue; }
-    out.warmup = out.warmup.concat(splitWarm(raw));
-  }
-
-  out.items.forEach(function(i){
-    if (out.gateItems.indexOf(i.n) >= 0) i.gated = true;
-    if (!i.rest) i.rest = out.restDefault || defaultRest(i.scheme);
-  });
-  return out;
-}
-/* PARSER-END */
-
-/* ============================ STORAGE ============================ */
-var IDX = 'rb:index', LAST = 'rb:last', mem = {};
-
-/* ============================ v5: PERFORMED-TIME STAMPS ============================
-   v4 and earlier recorded NO time of performance. The only date in the app was
-   session.date, which is the date typed into the sheet's DATE: header — the date
-   the session was PLANNED for. When a session slid a day, the summary still
-   reported the planned date and there was no way to tell from the log when the
-   work was actually done. That produced a real argument about what happened when.
-   v5 records three real timestamps on the log and emits them in the summary. */
-
-function nowMs(){ return Date.now(); }
-
-/* Cheap stable hash of everything the user has actually entered. Used to tell a
-   genuine edit from a heartbeat save, so finishedAt tracks the last real logged
-   set rather than the last time the page happened to write itself out. */
-function logFingerprint(log){
-  var s = '', k, keys;
-  keys = Object.keys(log.vals || {}).sort();
-  for (k = 0; k < keys.length; k++) s += keys[k] + '=' + log.vals[keys[k]] + ';';
-  keys = Object.keys(log.ticks || {}).sort();
-  for (k = 0; k < keys.length; k++) if (log.ticks[keys[k]]) s += 't' + keys[k] + ';';
-  keys = Object.keys(log.warmTicks || {}).sort();
-  for (k = 0; k < keys.length; k++) if (log.warmTicks[keys[k]]) s += 'w' + keys[k] + ';';
-  keys = Object.keys(log.skipped || {}).sort();
-  for (k = 0; k < keys.length; k++) if (log.skipped[keys[k]]) s += 's' + keys[k] + ';';
-  s += 'p' + log.pre + 'q' + log.post + 'c' + (log.cond ? 1 : 0);
-  var h = 5381;
-  for (k = 0; k < s.length; k++) h = ((h * 33) ^ s.charCodeAt(k)) >>> 0;
-  return h + ':' + s.length;
-}
-
-/* Has the user entered anything at all yet? An empty sheet must not claim a
-   start time just because it was opened. */
-function logHasContent(log){
-  var k;
-  for (k in log.vals) if (log.vals[k]) return true;
-  for (k in log.ticks) if (log.ticks[k]) return true;
-  for (k in log.warmTicks) if (log.warmTicks[k]) return true;
-  for (k in log.skipped) if (log.skipped[k]) return true;
-  if (log.pre !== null || log.post !== null || log.cond) return true;
-  if (log.notes) return true;
-  return false;
-}
-
-/* A stamp is earned by a CHANGE, never by a save. Saves happen constantly —
-   heartbeat, blur, visibilitychange, and once more every time an old session is
-   merely opened. If mere saving could stamp, then opening a session from three
-   days ago would relabel it as performed today, which is the exact failure this
-   version exists to prevent. So: compare the fingerprint, and only a real edit
-   moves anything. */
-function touchStamps(log){
-  var t = nowMs();
-  log.savedAt = t;
-  if (typeof log.fp !== 'string') log.fp = '';
-  var fp = logFingerprint(log);
-  if (fp === log.fp) return;
-  log.fp = fp;
-  if (!logHasContent(log)) return;
-  if (!log.startedAt) log.startedAt = t;
-  log.finishedAt = t;
-}
-
-/* v5: the on-screen date line. Shows the sheet date, and once anything has been
-   logged, the day it is actually being performed — so a drift is visible while
-   he is still standing at the machine, not three days later in a chat. */
-function renderStampLine(){
-  var el = document.getElementById('tDate');
-  if (!el || !session) return;
-  var log = session.log, txt = session.date || '';
-  if (log.startedAt){
-    var d = fmtDay(log.startedAt);
-    txt = txt ? txt + '  ·  performed ' + d : 'Performed ' + d;
-    if (session.date && d.indexOf(session.date) < 0 && session.date.indexOf(d) < 0) txt += '  ⚠ different day';
-  }
-  el.textContent = txt;
-}
-
-function fmtDay(ms){
-  if (!ms) return '';
-  return new Date(ms).toLocaleDateString([], {weekday:'long', month:'long', day:'numeric', year:'numeric'});
-}
-function fmtClock(ms){
-  if (!ms) return '';
-  return new Date(ms).toLocaleTimeString([], {hour:'numeric', minute:'2-digit'});
-}
-function fmtSpan(a, b){
-  if (!a || !b || b < a) return '';
-  var m = Math.round((b - a) / 60000);
-  if (m < 1) return 'under a minute';
-  var h = Math.floor(m / 60);
-  return h ? h + 'h ' + (m % 60) + 'm' : m + 'm';
-}
-/* True when the session crossed midnight — then the finish needs its own date. */
-function sameDay(a, b){
-  if (!a || !b) return true;
-  var x = new Date(a), y = new Date(b);
-  return x.getFullYear() === y.getFullYear() && x.getMonth() === y.getMonth() && x.getDate() === y.getDate();
-}
-
-function rawGet(key){
-  return new Promise(function(res){
-    try{
-      if (window.storage && window.storage.get){
-        window.storage.get(key).then(function(r){ res(r && r.value ? r.value : lsGet(key)); })
-                               .catch(function(){ res(lsGet(key)); });
-        return;
-      }
-    }catch(e){}
-    res(lsGet(key));
-  });
-}
-function rawSet(key, val){
-  return new Promise(function(res){
-    /* v4: localStorage FIRST and synchronously, every time. It is the only
-       write that is guaranteed to land before iOS suspends the app. Any
-       async mirror runs after, and its failure can no longer lose data. */
-    var okLocal = lsSet(key, val);
-    try{
-      if (window.storage && window.storage.set){
-        window.storage.set(key, val).then(function(){ res(true); })
-                                    .catch(function(){ res(okLocal); });
-        return;
-      }
-    }catch(e){}
-    res(okLocal);
-  });
-}
-function lsGet(k){ try{ return window.localStorage.getItem(k); }catch(e){ return mem[k] || null; } }
-function lsSet(k, v){
-  try{ window.localStorage.setItem(k, v); stamp(); return true; }
-  catch(e){ mem[k] = v; note('Held in this tab only — copy the summary before closing.'); return false; }
-}
-function jget(k){ return rawGet(k).then(function(v){ try{ return v ? JSON.parse(v) : null; }catch(e){ return null; } }); }
-function jset(k, o){ return rawSet(k, JSON.stringify(o)); }
-function note(t, dirty){
-  var e = document.getElementById('savedline');
-  if (!e) return;
-  e.textContent = t;
-  e.classList.toggle('dirty', !!dirty);
-}
-function stamp(){ note('Saved ' + new Date().toLocaleTimeString([], {hour:'numeric', minute:'2-digit'})); }
+var HIST_DAYS = 14, STAT_DAYS = 7;
 
 /* ============================ STATE ============================ */
-var session = null, index = [], saveT = null;
-function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){
-  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
-function $(id){ return document.getElementById(id); }
-function fmtSec(s){ return Math.floor(s / 60) + ':' + (s % 60 < 10 ? '0' : '') + (s % 60); }
+var cache = {};           // dateStr -> day object (loaded)
+var selDate = todayStr();
+var root = document.documentElement;
 
-function show(which){
-  ['Paste','Saved','Track'].forEach(function(v){
-    $('view' + v).classList.toggle('hide', v.toLowerCase() !== which);
+function pad(n){ return n < 10 ? '0'+n : ''+n; }
+function todayStr(){
+  var d = new Date();
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+}
+function offsetStr(dateStr, offset){
+  var p = dateStr.split('-').map(Number);
+  var d = new Date(p[0], p[1]-1, p[2]);
+  d.setDate(d.getDate()+offset);
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+}
+function fmtLong(dateStr){
+  var p = dateStr.split('-').map(Number);
+  var d = new Date(p[0], p[1]-1, p[2]);
+  return d.toLocaleDateString('en-US', {weekday:'long', month:'short', day:'numeric'});
+}
+function relLabel(dateStr){
+  var diff = Math.round((new Date(selDate+'T00:00:00') - new Date(dateStr+'T00:00:00'))/86400000);
+  if (dateStr === todayStr()) return 'today';
+  if (diff === 0) return '';
+  var d2 = Math.round((new Date(todayStr()+'T00:00:00') - new Date(dateStr+'T00:00:00'))/86400000);
+  if (d2 === 1) return 'yesterday';
+  if (d2 > 1) return d2 + ' days ago';
+  return '';
+}
+function emptyDay(dateStr){
+  return {date: dateStr, entries: [], flying: false};
+}
+function totals(day){
+  var g=0,k=0;
+  for (var i=0;i<day.entries.length;i++){ g+=day.entries[i].g; k+=day.entries[i].k||0; }
+  return {g:g,k:k};
+}
+function effBand(g,k){
+  if (!k) return null;
+  var e = g/k*100;
+  return e;
+}
+
+/* ============================ STORAGE ============================ */
+function keyFor(dateStr){ return 'day-'+dateStr; }
+
+function loadDay(dateStr){
+  return new Promise(function(resolve){
+    if (cache[dateStr]){ resolve(cache[dateStr]); return; }
+    var fallback = function(){
+      try{
+        var raw = localStorage.getItem(keyFor(dateStr));
+        var day = raw ? JSON.parse(raw) : emptyDay(dateStr);
+        cache[dateStr] = day;
+        resolve(day);
+      }catch(e){ cache[dateStr]=emptyDay(dateStr); resolve(cache[dateStr]); }
+    };
+    if (window.storage && window.storage.get){
+      window.storage.get(keyFor(dateStr), false).then(function(res){
+        var day = (res && res.value) ? JSON.parse(res.value) : emptyDay(dateStr);
+        cache[dateStr] = day;
+        resolve(day);
+      }).catch(function(){ fallback(); });
+    } else { fallback(); }
   });
-  $('dock').classList.toggle('hide', which !== 'track');
-  $('navNew').classList.toggle('on', which === 'paste');
-  $('navSaved').classList.toggle('on', which === 'saved');
-  window.scrollTo(0, 0);
 }
 
-/* v4 — THE FIX.
-   v3 wrote on a 400 ms debounce and nothing flushed it when the app went
-   away. Type a number into the last item, put the phone in your pocket, and
-   iOS suspends the page before the timer fires: that entry is gone and the
-   summary under-reports a set that was actually done (Sep 3, heel drop).
-   Now: every keystroke marks the session dirty and shows it, the write is
-   forced on blur, on Enter, on background, on hide, and on unload, and the
-   debounce is short. saveNow() is synchronous into localStorage. */
-var dirty = false;
-
-function markDirty(){
-  dirty = true;
-  note('Unsaved…', true);
-}
-
-function saveNow(){
-  clearTimeout(saveT); saveT = null;
-  if (!session) return;
-  collect();
-  touchStamps(session.log);   /* v5: stamp before the write, never after */
-  var payload = JSON.stringify(session);
-  try{ window.localStorage.setItem('rb:s:' + session.id, payload); dirty = false; stamp(); renderStampLine(); touchIndexStamps(session); }
-  catch(e){ mem['rb:s:' + session.id] = payload; note('Held in this tab only — copy the summary before closing.', true); }
-  try{ if (window.storage && window.storage.set) window.storage.set('rb:s:' + session.id, payload); }catch(e2){}
-}
-
-function save(){
-  markDirty();
-  clearTimeout(saveT);
-  saveT = setTimeout(saveNow, 250);
-}
-
-function collect(){
-  var log = session.log;
-  log.vals = {};
-  Array.prototype.forEach.call(document.querySelectorAll('[data-f]'), function(el){
-    if (el.value) log.vals[el.dataset.i + '-' + el.dataset.s + '-' + el.dataset.f] = el.value;
-  });
-  log.notesById = {};
-  Array.prototype.forEach.call(document.querySelectorAll('[data-note]'), function(el){
-    if (el.value) log.notesById[el.dataset.note] = el.value;
-  });
-  log.notes = $('notes').value;
-}
-
-/* ============================ BUILD FROM PASTE ============================ */
-function buildFrom(text){
-  var p = parseSheet(text);
-  if (!p.items.length) return null;
-  return {
-    id: String(Date.now()),
-    title: p.title || 'Session',
-    date: p.date || new Date().toLocaleDateString([], {weekday:'long', month:'short', day:'numeric'}),
-    gateThreshold: p.gateThreshold,
-    gateItems: p.gateItems,
-    warmup: p.warmup,
-    conditioning: p.conditioning,
-    restDefault: p.restDefault,
-    items: p.items,
-    log: { pre:null, post:null, cond:false, notes:'', vals:{}, ticks:{},
-           warmTicks:{}, notesById:{}, skipped:{}, extra:{},
-           /* v5 */ startedAt:null, finishedAt:null, savedAt:null, fp:'' }
-  };
-}
-
-/* Older saved sessions predate warmTicks and per-item rest. */
-function migrate(s){
-  if (!s.log.extra) s.log.extra = {};
-  if (!s.log.warmTicks) s.log.warmTicks = {};
-  /* v5: sessions saved by v4 and earlier carry no stamps. Leave them null rather
-     than inventing one — an unknown performed time must read as unknown. */
-  if (!('startedAt' in s.log)) s.log.startedAt = null;
-  if (!('finishedAt' in s.log)) s.log.finishedAt = null;
-  if (!('savedAt' in s.log)) s.log.savedAt = null;
-  /* Always recompute the fingerprint from what was actually loaded, rather than
-     trusting the stored one. This is what makes opening a session a no-op: the
-     first save after a load matches, so no stamp moves. */
-  s.log.fp = logFingerprint(s.log);
-  if (!s.warmup) s.warmup = [];
-  if (s.warmup.length === 1) s.warmup = splitWarm(s.warmup[0]);
-  s.items.forEach(function(i){ if (!i.rest) i.rest = s.restDefault || defaultRest(i.scheme); });
-  return s;
+function saveDay(day){
+  cache[day.date] = day;
+  var str = JSON.stringify(day);
+  try{ localStorage.setItem(keyFor(day.date), str); }catch(e){}
+  if (window.storage && window.storage.set){
+    window.storage.set(keyFor(day.date), str, false).catch(function(){});
+  }
 }
 
 /* ============================ RENDER ============================ */
-function chipsHtml(which){
-  var h = '';
-  for (var i = 1; i <= 10; i++) h += '<button type="button" class="chip" data-chip="' + which + '" data-val="' + i + '">' + i + '</button>';
-  return h;
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+function renderChips(){
+  var row = document.getElementById('chipRow');
+  row.innerHTML = QUICK_FOODS.map(function(f, i){
+    return '<button type="button" class="chip'+(f.bag?' bag':'')+'" data-qi="'+i+'">'+
+      '<span class="cn">'+esc(f.l)+'</span><span class="cd">'+f.g+' g &middot; '+f.k+' kcal</span></button>';
+  }).join('');
+  row.querySelectorAll('[data-qi]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var f = QUICK_FOODS[+btn.dataset.qi];
+      addEntry(f.l, f.g, f.k, guessWhen());
+    });
+  });
 }
 
-function renderSession(){
-  $('brand').textContent = session.title;
-  $('tTitle').textContent = session.title;
-  renderStampLine();
+function guessWhen(){
+  var h = new Date().getHours();
+  if (h < 11) return 'morning';
+  if (h < 16) return 'midday';
+  if (h < 21) return 'evening';
+  return 'night';
+}
 
-  var gated = session.items.filter(function(i){ return i.gated; }).map(function(i){ return i.n; });
-  $('gateBox').classList.toggle('hide', gated.length === 0);
-  if (gated.length){
-    $('gateSub').textContent = 'Right shoulder, 1 to 10. Below ' + session.gateThreshold +
-      ' locks out item' + (gated.length > 1 ? 's ' : ' ') + gated.join(', ') + '.';
-  }
-  $('preChips').innerHTML = chipsHtml('pre');
-  $('postChips').innerHTML = chipsHtml('post');
-
-  /* WARM-UP — one tickable row per line */
-  $('warmWrap').classList.toggle('hide', !session.warmup.length);
-  $('warmList').innerHTML = session.warmup.map(function(w, i){
-    return '<div class="warmrow" data-wtick="' + i + '">' +
-      '<button type="button" class="wtick" data-wtick="' + i + '">○</button>' +
-      '<div class="wtxt">' + esc(w) + '</div></div>';
+function renderRefTable(){
+  var rows = REF_FOODS.map(function(f){
+    return {l:f.l, g:f.g, k:f.k, e: f.g/f.k*100};
+  }).sort(function(a,b){ return b.e - a.e; });
+  var tb = document.querySelector('#refTable tbody');
+  tb.innerHTML = rows.map(function(r){
+    var band = r.e >= 15 ? 'cheap' : (r.e >= 10 ? 'mod' : 'exp');
+    return '<tr><td><span class="refband rb-'+band+'"></span>'+esc(r.l)+'</td>'+
+      '<td class="num">'+r.g+'</td><td class="num">'+r.k+'</td><td class="num">'+r.e.toFixed(1)+'</td></tr>';
   }).join('');
+}
 
-  $('condBox').classList.toggle('hide', !session.conditioning);
-  $('condText').textContent = session.conditioning;
+function addEntry(label, g, k, when){
+  loadDay(selDate).then(function(day){
+    day.entries.push({id: Date.now()+'-'+Math.random().toString(36).slice(2,7), l:label, g:+g||0, k:+k||0, w:when||guessWhen(), ts:Date.now()});
+    saveDay(day);
+    renderDay();
+  });
+}
 
-  $('listLabel').textContent = 'Session — ' + session.items.length + ' movement' + (session.items.length === 1 ? '' : 's');
+function delEntry(id){
+  loadDay(selDate).then(function(day){
+    day.entries = day.entries.filter(function(e){ return e.id !== id; });
+    saveDay(day);
+    renderDay();
+  });
+}
 
-  var extra = session.log.extra || {};
-  $('list').innerHTML = session.items.map(function(it){
-    var total = it.sets + (extra[it.n] || 0);
-    var rows = '';
-    for (var s = 1; s <= total; s++){
-      rows += '<div class="setrow">' +
-        '<div class="slab"' + (s > it.sets ? ' style="color:var(--amber)"' : '') + '>S' + s + '</div>' +
-        '<input type="text" inputmode="decimal" placeholder="lb" data-f="w" data-i="' + it.n + '" data-s="' + s + '">' +
-        '<input type="text" inputmode="numeric" placeholder="reps" data-f="r" data-i="' + it.n + '" data-s="' + s + '">' +
-        '<button type="button" class="tick" data-tick="' + it.n + '-' + s + '">○</button></div>';
+function renderDay(){
+  loadDay(selDate).then(function(day){
+    document.getElementById('dateLbl').textContent = fmtLong(selDate);
+    document.getElementById('dateRel').textContent = relLabel(selDate) || ' ';
+    document.getElementById('datePick').value = selDate;
+    document.getElementById('nextDay').disabled = (selDate >= todayStr());
+
+    var t = totals(day);
+    document.getElementById('totG').textContent = t.g;
+    document.getElementById('totK').textContent = t.k;
+
+    var pct = Math.min(100, t.g / TARGET * 100);
+    var fill = document.getElementById('barFill');
+    fill.style.width = pct + '%';
+    fill.classList.toggle('hit', t.g >= TARGET);
+    document.getElementById('barFloor').style.left = (FLOOR/TARGET*100) + '%';
+
+    var effWrap = document.getElementById('effWrap');
+    var eff = effBand(t.g, t.k);
+    if (eff === null){
+      effWrap.innerHTML = '<div class="noeff">No calories logged yet for this day.</div>';
+    } else {
+      var cls = eff >= 15 ? 'eff-cheap' : (eff >= 10 ? 'eff-mod' : 'eff-exp');
+      var word = eff >= 15 ? 'cheap' : (eff >= 10 ? 'moderate' : 'expensive');
+      effWrap.innerHTML = '<div class="effbadge '+cls+'">'+eff.toFixed(1)+' g/100kcal &middot; '+word+'</div>';
     }
-    return '<article class="item" data-item="' + it.n + '"' + (it.gated ? ' data-gated="1"' : '') + '>' +
-      '<div class="ihead" data-head="' + it.n + '">' +
-        '<div class="num">' + it.n + '</div><div class="iname">' +
-          '<h3>' + esc(it.name) + '</h3>' +
-          '<div class="scheme">' + esc(it.scheme) +
-            '<span class="rst">   ·   rest ' + fmtSec(it.rest) + '</span></div>' +
-          (it.target ? '<div class="target">' + esc(it.target) + '</div>' : '') +
-          '<div class="lockflag">Locked by the shoulder gate</div>' +
-          '<div class="partflag">Part logged — finish or tick every set</div>' +
-        '</div><div class="chev">▾</div></div>' +
-      '<div class="sets">' + rows +
-        '<div class="rowtools">' +
-          '<button type="button" class="minibtn" data-add="' + it.n + '">+ set</button>' +
-          '<button type="button" class="minibtn" data-skip="' + it.n + '">skipped</button>' +
-        '</div>' +
-        '<textarea class="inote" rows="1" placeholder="Machine, substitution, how it felt…" data-note="' + it.n + '"></textarea>' +
-      '</div></article>';
-  }).join('');
 
-  var log = session.log;
-  Object.keys(log.vals || {}).forEach(function(k){
-    var p = k.split('-');
-    var el = document.querySelector('[data-i="' + p[0] + '"][data-s="' + p[1] + '"][data-f="' + p[2] + '"]');
-    if (el) el.value = log.vals[k];
+    document.getElementById('flyCheck').checked = !!day.flying;
+
+    // four feedings
+    var f4 = document.getElementById('feed4');
+    f4.innerHTML = FEEDS.map(function(fd){
+      var sum = day.entries.filter(function(e){ return e.w === fd.k; }).reduce(function(a,e){ return a+e.g; },0);
+      var hit = sum >= 40;
+      return '<div class="feedbox'+(hit?' hit':'')+'"><div class="fname">'+fd.l+'</div><div class="fgram mono">'+sum+' g</div></div>';
+    }).join('');
+
+    // entries
+    var list = document.getElementById('entryList');
+    if (!day.entries.length){
+      list.innerHTML = '<div class="empty">Nothing logged for this day yet.</div>';
+    } else {
+      var sorted = day.entries.slice().sort(function(a,b){ return a.ts-b.ts; });
+      list.innerHTML = sorted.map(function(e){
+        return '<div class="entryrow"><span>'+esc(e.l)+' <span class="el">'+e.g+'g &middot; '+e.k+'kcal &middot; '+e.w+'</span></span>'+
+          '<button class="edel" data-del="'+e.id+'">&times;</button></div>';
+      }).join('');
+      list.querySelectorAll('[data-del]').forEach(function(btn){
+        btn.addEventListener('click', function(){ delEntry(btn.dataset.del); });
+      });
+    }
+
+    renderHistory();
+    renderStats();
   });
-  Object.keys(log.notesById || {}).forEach(function(id){
-    var el = document.querySelector('[data-note="' + id + '"]');
-    if (el) el.value = log.notesById[id];
-  });
-  $('notes').value = log.notes || '';
-  $('out').classList.remove('show');
-  $('warnbar').classList.remove('show');
-  paint();
 }
 
-function paint(){
-  if (!session) return;
-  var log = session.log;
-  var locked = (log.pre !== null && log.pre < session.gateThreshold);
-
-  ['pre','post'].forEach(function(w){
-    Array.prototype.forEach.call(document.querySelectorAll('[data-chip="' + w + '"]'), function(c){
-      var v = parseInt(c.dataset.val, 10);
-      c.classList.toggle('on', log[w] === v);
-      c.classList.toggle('low', log[w] !== null && log[w] < session.gateThreshold);
+function renderHistory(){
+  var dates = [];
+  for (var i = HIST_DAYS-1; i>=0; i--) dates.push(offsetStr(todayStr(), -i));
+  Promise.all(dates.map(loadDay)).then(function(days){
+    var row = document.getElementById('histRow');
+    row.innerHTML = days.map(function(day){
+      var t = totals(day);
+      var h = Math.max(2, Math.min(100, t.g / TARGET * 100));
+      var cls = t.g === 0 ? 'none' : (t.g >= TARGET ? 'hit' : (t.g >= FLOOR ? '' : 'under'));
+      var sel = day.date === selDate ? ' sel' : '';
+      var p = day.date.split('-');
+      return '<div class="histbar" data-d="'+day.date+'"><div class="stick '+cls+sel+'" style="height:'+h+'%" title="'+day.date+': '+t.g+'g"></div><div class="dlbl">'+p[2]+'</div></div>';
+    }).join('');
+    row.querySelectorAll('[data-d]').forEach(function(el){
+      el.addEventListener('click', function(){ selDate = el.dataset.d; renderDay(); });
     });
   });
+}
 
-  var gatedNums = session.items.filter(function(i){ return i.gated; }).map(function(i){ return i.n; });
-  var v = $('verdict'); v.className = 'verdict';
-  if (log.pre === null || !gatedNums.length){ v.innerHTML = ''; }
-  else if (locked){
-    v.classList.add('stop');
-    v.innerHTML = 'No-go — item' + (gatedNums.length > 1 ? 's ' : ' ') + gatedNums.join(', ') + ' are out' +
-      '<span>Everything else still runs in full. Rate again after and log both numbers.</span>';
-  } else {
-    v.classList.add('go');
-    v.innerHTML = 'Go — run the sheet as written<span>All ' + session.items.length + ' items.</span>';
-  }
+function renderStats(){
+  var dates = [];
+  for (var i = STAT_DAYS-1; i>=0; i--) dates.push(offsetStr(todayStr(), -i));
+  Promise.all(dates.map(loadDay)).then(function(days){
+    var logged = days.filter(function(d){ return d.entries.length>0; });
+    var sumG=0,sumK=0,atTarget=0;
+    logged.forEach(function(d){ var t=totals(d); sumG+=t.g; sumK+=t.k; if (t.g>=TARGET) atTarget++; });
+    var avg = logged.length ? Math.round(sumG/logged.length) : 0;
+    var eff = sumK ? (sumG/sumK*100).toFixed(1) : '—';
 
-  /* warm-up ticks */
-  var wdone = 0;
-  Array.prototype.forEach.call(document.querySelectorAll('.warmrow'), function(row){
-    var on = !!log.warmTicks[row.dataset.wtick];
-    row.classList.toggle('on', on);
-    var b = row.querySelector('.wtick');
-    b.classList.toggle('on', on);
-    b.textContent = on ? '✓' : '○';
-    if (on) wdone++;
+    // streak: walk backward from today while protein >= floor and day was logged
+    var streak = 0;
+    for (var j = days.length-1; j>=0; j--){
+      var t = totals(days[j]);
+      if (days[j].entries.length && t.g >= FLOOR) streak++;
+      else break;
+    }
+
+    var grid = document.getElementById('statGrid');
+    grid.innerHTML =
+      '<div class="statbox"><div class="sl">Days logged</div><div class="sv">'+logged.length+' of '+STAT_DAYS+'</div></div>'+
+      '<div class="statbox"><div class="sl">Average</div><div class="sv">'+avg+' g</div></div>'+
+      '<div class="statbox"><div class="sl">Days at target</div><div class="sv">'+atTarget+'</div></div>'+
+      '<div class="statbox"><div class="sl">Streak over floor</div><div class="sv">'+streak+'</div></div>'+
+      '<div class="statbox" style="grid-column:1/-1;"><div class="sl">7-day efficiency</div><div class="sv">'+eff+' g/100kcal</div></div>';
   });
-  if (session.warmup.length) $('warmCnt').textContent = wdone + '/' + session.warmup.length;
-
-  var done = 0, active = 0;
-  Array.prototype.forEach.call(document.querySelectorAll('.item'), function(card){
-    var n = card.dataset.item;
-    var isLocked = locked && card.dataset.gated === '1';
-    var isSkip = !!log.skipped[n];
-    card.classList.toggle('locked', isLocked);
-    card.classList.toggle('skipped', isSkip);
-    if (isLocked) card.classList.remove('open');
-
-    var ticks = card.querySelectorAll('.tick'), all = ticks.length > 0;
-    Array.prototype.forEach.call(ticks, function(tk){
-      var on = !!log.ticks[tk.dataset.tick];
-      tk.classList.toggle('on', on);
-      tk.textContent = on ? '✓' : '○';
-      if (!on) all = false;
-    });
-    card.classList.toggle('done', all && !isLocked && !isSkip);
-
-    /* v4: an item with some sets filled and some empty is flagged on the
-       card itself, not only in the copied summary. */
-    var filled = 0, rowsN = 0;
-    Array.prototype.forEach.call(card.querySelectorAll('.setrow'), function(row, i){
-      rowsN++;
-      var wv = row.querySelector('[data-f="w"]').value, rv = row.querySelector('[data-f="r"]').value;
-      if (wv || rv || log.ticks[n + '-' + (i + 1)]) filled++;
-    });
-    card.classList.toggle('partial', !isLocked && !isSkip && filled > 0 && filled < rowsN);
-
-    var sb = card.querySelector('[data-skip]');
-    if (sb) sb.textContent = isSkip ? 'un-skip' : 'skipped';
-    if (!isLocked && !isSkip){ active++; if (all) done++; }
-  });
-  $('prog').textContent = done + '/' + active;
-
-  var cb = $('condBtn');
-  cb.classList.toggle('on', log.cond);
-  cb.textContent = log.cond ? 'Conditioning done' : 'Mark conditioning done';
-}
-
-/* ============================ SAVED LIST ============================ */
-function renderSaved(){
-  if (!index.length){
-    $('savedList').innerHTML = '<div class="warmrow"><div class="wtxt">Nothing saved yet. Paste a sheet and it lands here.</div></div>';
-    return;
-  }
-  $('savedList').innerHTML = index.map(function(s){
-    return '<div class="srow' + (session && session.id === s.id ? ' cur' : '') + '">' +
-      '<div class="st"><h4>' + esc(s.title) + '</h4><div class="sd">' +
-        esc(s.startedAt ? fmtDay(s.startedAt) : (s.date || '')) +
-        (s.startedAt ? ' · ' + esc(fmtClock(s.startedAt)) : '') + '</div></div>' +
-      '<button type="button" class="navbtn" data-open="' + s.id + '">Open</button></div>';
-  }).join('');
-}
-
-function pushIndex(s){
-  index = index.filter(function(x){ return x.id !== s.id; });
-  index.unshift({ id: s.id, title: s.title, date: s.date,
-                  startedAt: s.log.startedAt || null, savedAt: s.log.savedAt || null });
-  index = index.slice(0, 40);
-  jset(IDX, index);
-  rawSet(LAST, s.id);
-}
-
-/* v5: keep the saved-sessions list honest about when each session was performed,
-   without writing the index on every heartbeat. Once a minute is plenty. */
-var lastIdxWrite = 0;
-function touchIndexStamps(s){
-  var rec = null, i;
-  for (i = 0; i < index.length; i++) if (index[i].id === s.id){ rec = index[i]; break; }
-  if (!rec) return;
-  var changed = (rec.startedAt !== (s.log.startedAt || null));
-  if (!changed && nowMs() - lastIdxWrite < 60000) return;
-  rec.startedAt = s.log.startedAt || null;
-  rec.savedAt = s.log.savedAt || null;
-  lastIdxWrite = nowMs();
-  jset(IDX, index);
-  renderSaved();
-}
-
-/* ============================ TIMER ============================ */
-var restEnd = 0, iv = null, lastRestSec = 90, autoT = null, lastAutoKey = '';
-
-function left(){ return Math.max(0, Math.round((restEnd - Date.now()) / 1000)); }
-
-function itemRest(n){
-  if (!session) return 90;
-  var it = null;
-  session.items.forEach(function(x){ if (String(x.n) === String(n)) it = x; });
-  return (it && it.rest) || session.restDefault || 90;
-}
-
-function startRest(sec, whoText){
-  if (!(sec > 0)) sec = lastRestSec || 90;
-  lastRestSec = sec;
-  restEnd = Date.now() + sec * 1000;
-  if (!iv) iv = setInterval(tickClock, 250);
-  $('restwho').textContent = whoText || '';
-  $('tpre').textContent = fmtSec(sec);
-  tickClock();
-}
-
-function tickClock(){
-  var c = $('clock'), l = left();
-  c.textContent = fmtSec(l);
-  c.classList.toggle('rest', l > 0);
-  if (l === 0 && iv){
-    clearInterval(iv); iv = null;
-    $('restwho').textContent = 'Rest done';
-    if (navigator.vibrate) navigator.vibrate([180, 90, 180]);
-  }
-}
-
-/* Auto-start rest once a set has a rep count. Debounced so typing "12"
-   does not fire on "1". Re-firing for the same set is suppressed. */
-function autoRest(el){
-  var n = el.dataset.i, s = el.dataset.s;
-  var row = el.closest('.setrow');
-  if (!row) return;
-  var rv = row.querySelector('[data-f="r"]').value;
-  var key = n + '-' + s + ':' + rv;
-  if (!trim(rv)) { return; }
-  if (key === lastAutoKey) return;
-  lastAutoKey = key;
-  var card = el.closest('.item');
-  var nm = card ? card.querySelector('h3').textContent : '';
-  startRest(itemRest(n), 'Rest after ' + nm + ' S' + s);
 }
 
 /* ============================ EVENTS ============================ */
-document.addEventListener('click', function(e){
-  var el = e.target.closest('[data-chip],[data-tick],[data-wtick],[data-head],[data-add],[data-skip],[data-open],' +
-    '#condBtn,#copyBtn,#buildBtn,#exampleBtn,#navNew,#navSaved,#delBtn,#tpre,#t30,#tstop');
-  if (!el) return;
-
-  if (el.id === 'navNew'){ if (session) saveNow(); show('paste'); return; }
-  if (el.id === 'navSaved'){ if (session) saveNow(); renderSaved(); show('saved'); return; }
-
-  if (el.id === 'exampleBtn'){ $('pasteBox').value = EXAMPLE; return; }
-
-  if (el.id === 'buildBtn'){
-    if (session) saveNow();
-    var s = buildFrom($('pasteBox').value);
-    if (!s){
-      $('pasteErr').textContent = 'No movements found. Each movement needs a name and a "3 x 8" on the same line.';
-      $('pasteErr').classList.remove('hide');
-      return;
-    }
-    $('pasteErr').classList.add('hide');
-    session = s;
-    jset('rb:s:' + s.id, s);
-    pushIndex(s);
-    renderSession();
-    show('track');
-    return;
-  }
-
-  if (el.dataset.open){
-    if (session) saveNow();
-    jget('rb:s:' + el.dataset.open).then(function(s){
-      if (!s) return;
-      session = migrate(s);
-      rawSet(LAST, s.id);
-      renderSession();
-      show('track');
-    });
-    return;
-  }
-
-  if (el.id === 'delBtn'){
-    if (!session) return;
-    if (!window.confirm('Delete "' + session.title + '" and everything logged in it?')) return;
-    index = index.filter(function(x){ return x.id !== session.id; });
-    jset(IDX, index);
-    rawSet('rb:s:' + session.id, '');
-    session = null;
-    renderSaved(); show('saved');
-    return;
-  }
-
-  if (!session) return;
-  var log = session.log;
-
-  /* Every state change below is written straight through — no debounce.
-     These are the actions most likely to be the last thing you touch. */
-  if (el.dataset.chip){
-    var w = el.dataset.chip, val = parseInt(el.dataset.val, 10);
-    log[w] = (log[w] === val ? null : val);
-    paint(); saveNow(); return;
-  }
-  /* WARM-UP tick — the whole row is a hit target, not just the button */
-  if (el.dataset.wtick !== undefined && el.dataset.wtick !== ''){
-    var wk = el.dataset.wtick;
-    log.warmTicks[wk] = !log.warmTicks[wk];
-    paint(); saveNow(); return;
-  }
-  if (el.dataset.tick){
-    var k = el.dataset.tick;
-    log.ticks[k] = !log.ticks[k];
-    if (log.ticks[k]){
-      var parts = k.split('-');
-      var c2 = document.querySelector('.item[data-item="' + parts[0] + '"]');
-      var nm2 = c2 ? c2.querySelector('h3').textContent : '';
-      startRest(itemRest(parts[0]), 'Rest after ' + nm2 + ' S' + parts[1]);
-    }
-    paint(); saveNow(); return;
-  }
-  if (el.dataset.head){
-    var card = el.closest('.item');
-    if (!card.classList.contains('locked')) card.classList.toggle('open');
-    return;
-  }
-  if (el.dataset.add){
-    var n = el.dataset.add;
-    log.extra[n] = (log.extra[n] || 0) + 1;
-    collect();
-    renderSession();
-    var c = document.querySelector('.item[data-item="' + n + '"]');
-    if (c) c.classList.add('open');
-    saveNow(); return;
-  }
-  if (el.dataset.skip){
-    log.skipped[el.dataset.skip] = !log.skipped[el.dataset.skip];
-    paint(); saveNow(); return;
-  }
-  if (el.id === 'condBtn'){ log.cond = !log.cond; paint(); saveNow(); return; }
-  if (el.id === 'copyBtn'){ summary(); return; }
-  if (el.id === 'tpre'){ startRest(lastRestSec, 'Rest'); return; }
-  if (el.id === 't30'){ startRest(left() + 30, $('restwho').textContent); return; }
-  if (el.id === 'tstop'){ restEnd = 0; $('restwho').textContent = ''; tickClock(); return; }
+document.getElementById('prevDay').addEventListener('click', function(){
+  selDate = offsetStr(selDate, -1); renderDay();
+});
+document.getElementById('nextDay').addEventListener('click', function(){
+  if (selDate >= todayStr()) return;
+  selDate = offsetStr(selDate, 1); renderDay();
+});
+document.getElementById('todayBtn').addEventListener('click', function(){
+  selDate = todayStr(); renderDay();
+});
+document.getElementById('datePick').addEventListener('change', function(e){
+  if (e.target.value) { selDate = e.target.value; renderDay(); }
+});
+document.getElementById('flyCheck').addEventListener('change', function(e){
+  loadDay(selDate).then(function(day){ day.flying = e.target.checked; saveDay(day); });
+});
+document.getElementById('cAdd').addEventListener('click', function(){
+  var l = document.getElementById('cLabel').value.trim();
+  var g = document.getElementById('cGrams').value;
+  var k = document.getElementById('cKcal').value;
+  var w = document.getElementById('cWhen').value;
+  if (!l || !g) return;
+  addEntry(l, g, k||0, w);
+  document.getElementById('cLabel').value='';
+  document.getElementById('cGrams').value='';
+  document.getElementById('cKcal').value='';
+});
+document.getElementById('themeBtn').addEventListener('click', function(){
+  var cur = document.body.getAttribute('data-theme');
+  var next = cur === 'dark' ? 'light' : 'dark';
+  document.body.setAttribute('data-theme', next);
+  this.textContent = next === 'dark' ? 'LIGHT' : 'DARK';
+  try{ localStorage.setItem('pc-theme', next); }catch(e){}
 });
 
-document.addEventListener('input', function(e){
-  if (e.target.matches('[data-f],[data-note],#notes')){ save(); paint(); }
-  if (e.target.matches('[data-f="r"]')){
-    clearTimeout(autoT);
-    var el = e.target;
-    autoT = setTimeout(function(){ autoRest(el); }, 1100);
+/* ============================ INIT ============================ */
+(function init(){
+  var savedTheme = 'dark';
+  try{ savedTheme = localStorage.getItem('pc-theme') || 'dark'; }catch(e){}
+  document.body.setAttribute('data-theme', savedTheme);
+  document.getElementById('themeBtn').textContent = savedTheme === 'dark' ? 'LIGHT' : 'DARK';
+
+  document.getElementById('datePick').max = todayStr();
+
+  renderChips();
+  renderRefTable();
+  document.getElementById('asOf').textContent = 'v3 — adds a date picker so a previous day can be logged. Rebuilt ' +
+    new Date().toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric', year:'numeric'});
+  renderDay();
+
+  if ('serviceWorker' in navigator){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
   }
-});
-
-/* Blur or Enter fires the rest immediately, no wait for the debounce. */
-document.addEventListener('change', function(e){
-  if (e.target.matches('[data-f],[data-note],#notes')) saveNow();
-  if (e.target.matches('[data-f="r"]')){ clearTimeout(autoT); autoRest(e.target); }
-});
-
-/* v4 — FORCED WRITES. Any one of these is enough to keep the last number. */
-document.addEventListener('blur', function(e){
-  if (e.target && e.target.matches && e.target.matches('[data-f],[data-note],#notes')) saveNow();
-}, true);
-
-document.addEventListener('keydown', function(e){
-  if (e.key === 'Enter' && e.target && e.target.matches && e.target.matches('[data-f]')){
-    e.target.blur();
-    saveNow();
-  }
-});
-
-document.addEventListener('visibilitychange', function(){
-  if (document.visibilityState === 'hidden') saveNow();
-});
-window.addEventListener('pagehide', saveNow);
-window.addEventListener('beforeunload', saveNow);
-window.addEventListener('blur', saveNow);
-/* Belt and braces: a slow heartbeat catches anything the events miss. */
-setInterval(function(){ if (dirty) saveNow(); }, 5000);
-
-/* ============================ SUMMARY ============================ */
-function summary(){
-  saveNow();
-  var log = session.log;
-  var locked = (log.pre !== null && log.pre < session.gateThreshold);
-  var L = [], gaps = [];
-  L.push(session.title.toUpperCase());
-
-  /* v5: the performed date leads, the sheet date follows. These are different
-     facts and conflating them is what caused the confusion this replaces. */
-  if (log.startedAt){
-    var line = 'PERFORMED: ' + fmtDay(log.startedAt) + ' — ' + fmtClock(log.startedAt);
-    if (log.finishedAt && log.finishedAt > log.startedAt){
-      line += ' to ' + (sameDay(log.startedAt, log.finishedAt)
-        ? fmtClock(log.finishedAt)
-        : fmtClock(log.finishedAt) + ' on ' + fmtDay(log.finishedAt));
-      var sp = fmtSpan(log.startedAt, log.finishedAt);
-      if (sp) line += ' (' + sp + ')';
-    }
-    L.push(line);
-  } else {
-    L.push('PERFORMED: not recorded — no sets were logged in the app.');
-  }
-  if (log.savedAt) L.push('SAVED: ' + fmtDay(log.savedAt) + ' at ' + fmtClock(log.savedAt));
-  if (session.date) L.push('SHEET WRITTEN FOR: ' + session.date);
-
-  L.push('Shoulder PRE ' + (log.pre === null ? '—' : log.pre) + ' / POST ' + (log.post === null ? '—' : log.post) +
-    (locked ? '  [GATE CLOSED]' : ''));
-  L.push('');
-
-  if (session.warmup.length){
-    var wd = session.warmup.filter(function(w, i){ return !!log.warmTicks[i]; }).length;
-    L.push('Warm-up: ' + wd + '/' + session.warmup.length + ' done' +
-      (wd < session.warmup.length
-        ? ' — MISSED: ' + session.warmup.filter(function(w, i){ return !log.warmTicks[i]; }).join('; ')
-        : ''));
-    L.push('');
-  }
-
-  Array.prototype.forEach.call(document.querySelectorAll('.item'), function(card){
-    var n = card.dataset.item, name = card.querySelector('h3').textContent;
-    if (locked && card.dataset.gated === '1'){ L.push(n + '. ' + name + ' — LOCKED OUT (gate)'); return; }
-    var nt = log.notesById[n] ? '  (' + log.notesById[n] + ')' : '';
-    if (log.skipped[n]){ L.push(n + '. ' + name + ' — SKIPPED' + nt); return; }
-    var parts = [], rows = card.querySelectorAll('.setrow'), blanks = 0;
-    Array.prototype.forEach.call(rows, function(row, i){
-      var wv = row.querySelector('[data-f="w"]').value, rv = row.querySelector('[data-f="r"]').value;
-      if (wv || rv || log.ticks[n + '-' + (i + 1)]) parts.push((wv || 'BW') + ' × ' + (rv || '—'));
-      else blanks++;
-    });
-    /* Blank sets used to vanish silently and under-report the session. */
-    var flag = (parts.length && blanks) ? '   [' + parts.length + ' of ' + rows.length + ' sets logged]' : '';
-    if (!parts.length || blanks) gaps.push(n + '. ' + name);
-    L.push(n + '. ' + name + ' — ' + (parts.length ? parts.join(', ') : 'not logged') + nt + flag);
-  });
-  L.push('');
-  if (session.conditioning) L.push('Conditioning: ' + (log.cond ? 'done — ' + session.conditioning : 'NOT DONE'));
-  if (log.post === null) L.push('POST SHOULDER NOT RATED.');
-  if (log.notes) L.push('Notes: ' + log.notes);
-
-  var text = L.join('\n'), out = $('out');
-  out.value = text; out.classList.add('show');
-
-  /* v4: say out loud what is missing BEFORE it gets pasted back. */
-  var wb = $('warnbar'), msgs = [];
-  if (gaps.length) msgs.push('Incomplete: ' + gaps.join('; ') + '. Fill or tick them, then copy again.');
-  if (log.post === null) msgs.push('POST shoulder not rated.');
-  if (msgs.length){ wb.textContent = msgs.join('  '); wb.classList.add('show'); }
-  else { wb.classList.remove('show'); }
-
-  if (navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(text).then(function(){
-      note('Copied. Paste it back into the chat.');
-    }).catch(function(){ out.focus(); out.select(); });
-  } else { out.focus(); out.select(); note('Select the text above and copy it.'); }
-}
-
-/* ============================ EXAMPLE ============================ */
-var EXAMPLE = [
-'TITLE: Push A — Day 2',
-'DATE: Monday, August 31, 2026',
-'GATE: below 7 locks out items 1-4',
-'WARM-UP: Golf Forever — it IS the warm-up  /  T-spine: foam roller extension 2 x 10, open book 2 x 10 each  /  Band pull-apart 2 x 15',
-'CONDITIONING: 8 x (30 sec hard / 90 sec easy) on the BIKE. Not running.',
-'',
-'1 | Barbell bench (Tonal) | 3 x 8 | 52 TOTAL — up from 49 | 150 s',
-'2 | Incline press (Tonal) | 3 x 10 | 21 PER HAND (42 total) | 120 s',
-'3 | Overhead press (Tonal) | 3 x 8 | HOLD 22. Do not add weight. | 120 s',
-'4 | Chest fly (Tonal) | 3 x 12 | 10 PER HAND (20 total) | 90 s',
-'5 | Lateral raise (Tonal) | 3 x 12-15 | 5 PER HAND — Tonal number, not the DB one | 75 s',
-'6 | Tricep pressdown | 3 x 12 | 35 — log the machine | 75 s',
-'7 | Skullcrusher (Tonal barbell) | 3 x 10 | 40 | 90 s',
-'8 | Face pull | 3 x 15 | 35 — non-negotiable. Elbows high. | 60 s',
-'9 | Prone IR / ER | 2 x 12 | AFTER pressing, never before. | 45 s',
-'10 | Pallof press | 3 x 12 | 18 — half-kneeling | 60 s',
-'11 | Weighted crunch | 3 x 15 | 32.5 | 60 s',
-'12 | Dead bug | 2 x 10 | Lumbar flat. | 45 s',
-'13 | Eccentric heel drop | 3 x 15 | 30 TOTAL (15 per hand) — 3 sec down. | 60 s'
-].join('\n');
-
-/* ============================ BOOT ============================ */
-tickClock();
-jget(IDX).then(function(ix){
-  index = Array.isArray(ix) ? ix : [];
-  return rawGet(LAST);
-}).then(function(lastId){
-  if (!lastId) { show('paste'); return; }
-  return jget('rb:s:' + lastId).then(function(s){
-    if (!s || !s.items){ show('paste'); return; }
-    session = migrate(s);
-    renderSession();
-    show('track');
-  });
-}).catch(function(){ show('paste'); });
-
 })();
 
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function(){
-    navigator.serviceWorker.register('sw.js').catch(function(){});
-  });
-}
+})();
 </script>
 </body>
 </html>
