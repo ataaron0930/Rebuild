@@ -1,4 +1,4 @@
-var CACHE = 'protein-count-v3';
+var CACHE = 'protein-count-v4';
 var FILES = ['./', './index.html', './manifest.webmanifest', './apple-touch-icon.png', './icon-512.png'];
 
 self.addEventListener('install', function(e){

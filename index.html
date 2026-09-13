@@ -95,6 +95,17 @@
   .flyrow{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:13px;color:var(--text-dim);}
   .flyrow input{width:16px;height:16px;accent-color:var(--amber);}
 
+  .recovgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  .recovfield{display:flex;flex-direction:column;gap:4px;}
+  .recovfield .rl{font-size:11px;color:var(--text-dim);}
+  .recovfield .riw{display:flex;align-items:center;background:var(--surf2);border:1px solid var(--border);border-radius:6px;padding:6px 8px;}
+  .recovfield input{background:none;border:none;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:16px;width:100%;min-width:0;}
+  .recovfield input:focus{outline:none;}
+  .recovfield .ru{font-size:11px;color:var(--text-dim);margin-left:4px;}
+  .recovfield.low .riw{border-color:var(--red);}
+  .recovfield.ok .riw{border-color:var(--green);}
+  .recovnote{font-size:12px;color:var(--amber);margin-top:10px;min-height:1px;}
+
   .feed4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
   .feedbox{background:var(--surf2);border:1px solid var(--border);border-radius:8px;padding:8px 4px;text-align:center;}
   .feedbox.hit{border-color:var(--green);background:rgba(90,157,111,.14);}
@@ -194,6 +205,25 @@
     <div class="bar-labels"><span>0</span><span>floor 170</span><span>target 180</span></div>
     <div id="effWrap"></div>
     <label class="flyrow"><input type="checkbox" id="flyCheck"> Flying day</label>
+  </div>
+
+  <div class="card">
+    <h2>Recovery <span style="font-weight:400;color:var(--text-dim);">&middot; from Oura</span></h2>
+    <div class="recovgrid">
+      <label class="recovfield">
+        <span class="rl">Sleep</span>
+        <div class="riw"><input type="number" id="rSleep" step="0.1" min="0" max="24" placeholder="0.0"><span class="ru">hrs</span></div>
+      </label>
+      <label class="recovfield">
+        <span class="rl">Sleep score</span>
+        <div class="riw"><input type="number" id="rSleepScore" step="1" min="0" max="100" placeholder="—"></div>
+      </label>
+      <label class="recovfield">
+        <span class="rl">Readiness</span>
+        <div class="riw"><input type="number" id="rReadiness" step="1" min="0" max="100" placeholder="—"></div>
+      </label>
+    </div>
+    <div class="recovnote" id="recovNote"></div>
   </div>
 
   <div class="card">
@@ -323,7 +353,11 @@ function relLabel(dateStr){
   return '';
 }
 function emptyDay(dateStr){
-  return {date: dateStr, entries: [], flying: false};
+  return {date: dateStr, entries: [], flying: false, sleep: {h:null, ss:null, rs:null}};
+}
+function ensureSleep(day){
+  if (!day.sleep) day.sleep = {h:null, ss:null, rs:null};
+  return day.sleep;
 }
 function totals(day){
   var g=0,k=0;
@@ -451,6 +485,29 @@ function renderDay(){
 
     document.getElementById('flyCheck').checked = !!day.flying;
 
+    // recovery
+    var sl = ensureSleep(day);
+    document.getElementById('rSleep').value = (sl.h === null || sl.h === undefined) ? '' : sl.h;
+    document.getElementById('rSleepScore').value = (sl.ss === null || sl.ss === undefined) ? '' : sl.ss;
+    document.getElementById('rReadiness').value = (sl.rs === null || sl.rs === undefined) ? '' : sl.rs;
+
+    var sleepField = document.getElementById('rSleep').closest('.recovfield');
+    var readyField = document.getElementById('rReadiness').closest('.recovfield');
+    sleepField.classList.remove('low','ok');
+    readyField.classList.remove('low','ok');
+    if (sl.h !== null && sl.h !== undefined && sl.h !== ''){
+      sleepField.classList.add(sl.h < 6 ? 'low' : 'ok');
+    }
+    if (sl.rs !== null && sl.rs !== undefined && sl.rs !== ''){
+      readyField.classList.add(sl.rs < 70 ? 'low' : 'ok');
+    }
+    var note = document.getElementById('recovNote');
+    if ((sl.h !== null && sl.h !== undefined && sl.h < 6) || (sl.rs !== null && sl.rs !== undefined && sl.rs < 70)){
+      note.textContent = 'Short or low-readiness night — this is the ceiling on what today\u2019s training converts into.';
+    } else {
+      note.textContent = '';
+    }
+
     // four feedings
     var f4 = document.getElementById('feed4');
     f4.innerHTML = FEEDS.map(function(fd){
@@ -516,12 +573,20 @@ function renderStats(){
       else break;
     }
 
+    // sleep / readiness averages over days that have a reading
+    var sleepDays = days.filter(function(d){ var s=ensureSleep(d); return s.h!==null && s.h!==undefined; });
+    var readyDays = days.filter(function(d){ var s=ensureSleep(d); return s.rs!==null && s.rs!==undefined; });
+    var avgSleep = sleepDays.length ? (sleepDays.reduce(function(a,d){ return a+d.sleep.h; },0)/sleepDays.length).toFixed(1) : '—';
+    var avgReady = readyDays.length ? Math.round(readyDays.reduce(function(a,d){ return a+d.sleep.rs; },0)/readyDays.length) : '—';
+
     var grid = document.getElementById('statGrid');
     grid.innerHTML =
       '<div class="statbox"><div class="sl">Days logged</div><div class="sv">'+logged.length+' of '+STAT_DAYS+'</div></div>'+
       '<div class="statbox"><div class="sl">Average</div><div class="sv">'+avg+' g</div></div>'+
       '<div class="statbox"><div class="sl">Days at target</div><div class="sv">'+atTarget+'</div></div>'+
       '<div class="statbox"><div class="sl">Streak over floor</div><div class="sv">'+streak+'</div></div>'+
+      '<div class="statbox"><div class="sl">7-day avg sleep</div><div class="sv">'+avgSleep+(avgSleep!=='—'?' hrs':'')+'</div></div>'+
+      '<div class="statbox"><div class="sl">7-day avg readiness</div><div class="sv">'+avgReady+'</div></div>'+
       '<div class="statbox" style="grid-column:1/-1;"><div class="sl">7-day efficiency</div><div class="sv">'+eff+' g/100kcal</div></div>';
   });
 }
@@ -543,6 +608,19 @@ document.getElementById('datePick').addEventListener('change', function(e){
 document.getElementById('flyCheck').addEventListener('change', function(e){
   loadDay(selDate).then(function(day){ day.flying = e.target.checked; saveDay(day); });
 });
+function wireRecov(id, field){
+  document.getElementById(id).addEventListener('change', function(e){
+    var v = e.target.value === '' ? null : parseFloat(e.target.value);
+    loadDay(selDate).then(function(day){
+      ensureSleep(day)[field] = v;
+      saveDay(day);
+      renderDay();
+    });
+  });
+}
+wireRecov('rSleep', 'h');
+wireRecov('rSleepScore', 'ss');
+wireRecov('rReadiness', 'rs');
 document.getElementById('cAdd').addEventListener('click', function(){
   var l = document.getElementById('cLabel').value.trim();
   var g = document.getElementById('cGrams').value;
@@ -573,7 +651,7 @@ document.getElementById('themeBtn').addEventListener('click', function(){
 
   renderChips();
   renderRefTable();
-  document.getElementById('asOf').textContent = 'v3 — adds a date picker so a previous day can be logged. Rebuilt ' +
+  document.getElementById('asOf').textContent = 'v4 — adds a Recovery card (Oura sleep, sleep score, readiness). Rebuilt ' +
     new Date().toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric', year:'numeric'});
   renderDay();
 
