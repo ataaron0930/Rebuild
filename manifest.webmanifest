@@ -1,13 +1,14 @@
 {
-  "name": "Protein Count",
-  "short_name": "Protein",
+  "name": "The Rebuild — session builder",
+  "short_name": "Rebuild",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#1c2027",
-  "theme_color": "#1c2027",
+  "background_color": "#0E141A",
+  "theme_color": "#0E141A",
+  "orientation": "portrait",
   "icons": [
-    { "src": "apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ]
 }
